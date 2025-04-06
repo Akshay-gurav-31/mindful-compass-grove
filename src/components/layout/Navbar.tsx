@@ -4,11 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserCircle, LogOut } from "lucide-react";
+import { UserCircle, LogOut, MessageSquare, Calendar, Video } from "lucide-react";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, userType } = useAuth();
   const navigate = useNavigate();
 
   const toggleMobileMenu = () => {
@@ -37,13 +37,20 @@ const Navbar = () => {
             <Link to="/about" className="text-gray-300 hover:text-mindful-primary transition-colors">About</Link>
             <Link to="/services" className="text-gray-300 hover:text-mindful-primary transition-colors">Services</Link>
             <Link to="/contact" className="text-gray-300 hover:text-mindful-primary transition-colors">Contact</Link>
-            <Link to="/chatbot" className="text-gray-300 hover:text-mindful-primary transition-colors">AI Support</Link>
+            
+            {/* Show AI Support link only for patients or non-logged in users */}
+            {(!isAuthenticated || userType === 'patient') && (
+              <Link to="/chatbot" className="text-gray-300 hover:text-mindful-primary transition-colors">AI Support</Link>
+            )}
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <Link to="/dashboard" className="flex items-center space-x-2 text-gray-300 hover:text-mindful-primary">
+                <Link 
+                  to={userType === 'doctor' ? "/doctor-dashboard" : "/dashboard"} 
+                  className="flex items-center space-x-2 text-gray-300 hover:text-mindful-primary"
+                >
                   <UserCircle size={20} />
                   <span>{user?.name || 'Profile'}</span>
                 </Link>
@@ -90,11 +97,18 @@ const Navbar = () => {
             <Link to="/about" className="text-gray-300 hover:text-mindful-primary transition-colors">About</Link>
             <Link to="/services" className="text-gray-300 hover:text-mindful-primary transition-colors">Services</Link>
             <Link to="/contact" className="text-gray-300 hover:text-mindful-primary transition-colors">Contact</Link>
-            <Link to="/chatbot" className="text-gray-300 hover:text-mindful-primary transition-colors">AI Support</Link>
+            
+            {/* Show AI Support link only for patients or non-logged in users */}
+            {(!isAuthenticated || userType === 'patient') && (
+              <Link to="/chatbot" className="text-gray-300 hover:text-mindful-primary transition-colors">AI Support</Link>
+            )}
             
             {isAuthenticated ? (
               <div className="flex flex-col space-y-2 pt-2">
-                <Link to="/dashboard" className="flex items-center space-x-2 text-gray-300 hover:text-mindful-primary">
+                <Link 
+                  to={userType === 'doctor' ? "/doctor-dashboard" : "/dashboard"}
+                  className="flex items-center space-x-2 text-gray-300 hover:text-mindful-primary"
+                >
                   <UserCircle size={20} />
                   <span>{user?.name || 'Profile'}</span>
                 </Link>

@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import About from "./pages/About";
@@ -12,10 +12,27 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Chatbot from "./pages/Chatbot";
 import Dashboard from "./pages/Dashboard";
+import DoctorDashboard from "./pages/DoctorDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
+
+// Router guard component to redirect based on user type
+const RoleBasedRedirect = () => {
+  const { isAuthenticated, userType } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (userType === 'doctor') {
+    return <Navigate to="/doctor-dashboard" replace />;
+  }
+  
+  return <Navigate to="/dashboard" replace />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,13 +47,30 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/chatbot" element={<Chatbot />} />
+          
+          {/* Protected patient routes */}
+          <Route path="/chatbot" element={
+            <ProtectedRoute requiredUserType="patient">
+              <Chatbot />
+            </ProtectedRoute>
+          } />
           <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredUserType="patient">
               <Dashboard />
             </ProtectedRoute>
           } />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          
+          {/* Protected doctor routes */}
+          <Route path="/doctor-dashboard" element={
+            <ProtectedRoute requiredUserType="doctor">
+              <DoctorDashboard />
+            </ProtectedRoute>
+          } />
+          
+          {/* Smart redirect based on user type */}
+          <Route path="/account" element={<RoleBasedRedirect />} />
+          
+          {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

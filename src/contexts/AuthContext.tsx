@@ -12,6 +12,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  userType: 'patient' | 'doctor' | null;
   login: (user: User) => void;
   logout: () => void;
 }
@@ -33,6 +34,7 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userType, setUserType] = useState<'patient' | 'doctor' | null>(null);
 
   useEffect(() => {
     // Check for user in localStorage on component mount
@@ -41,23 +43,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
       setIsAuthenticated(true);
+      setUserType(parsedUser.type);
     }
   }, []);
 
   const login = (userData: User) => {
     setUser(userData);
     setIsAuthenticated(true);
+    setUserType(userData.type);
     localStorage.setItem('mindfulGroveUser', JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
+    setUserType(null);
     localStorage.removeItem('mindfulGroveUser');
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, userType, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
