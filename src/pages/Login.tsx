@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import MainLayout from "@/components/layout/MainLayout";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isAuthenticated, login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [patientForm, setPatientForm] = useState({
@@ -22,6 +25,13 @@ const Login = () => {
     email: "",
     password: "",
   });
+
+  useEffect(() => {
+    // If user is already logged in, redirect to dashboard
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handlePatientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -43,14 +53,26 @@ const Login = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate login
+    // Simulate login (in a real app, this would be an API call)
     setTimeout(() => {
       setIsSubmitting(false);
+      
+      // Create a mock user for demo purposes
+      const user = {
+        id: "p123",
+        email: patientForm.email,
+        name: patientForm.email.split('@')[0],
+        type: 'patient' as const,
+      };
+      
+      login(user);
+      
       toast({
         title: "Login Successful",
         description: "Welcome back to Mindful Grove!",
       });
-      navigate("/dashboard"); // Redirect to dashboard after successful login
+      
+      navigate("/dashboard");
     }, 1500);
   };
 
@@ -61,36 +83,48 @@ const Login = () => {
     // Simulate login
     setTimeout(() => {
       setIsSubmitting(false);
+      
+      // Create a mock user for demo purposes
+      const user = {
+        id: "d456",
+        email: doctorForm.email,
+        name: "Dr. " + doctorForm.email.split('@')[0],
+        type: 'doctor' as const,
+      };
+      
+      login(user);
+      
       toast({
         title: "Professional Login Successful",
         description: "Welcome back to the Mindful Grove professional portal!",
       });
-      navigate("/dashboard"); // Redirect to dashboard after successful login
+      
+      navigate("/dashboard");
     }, 1500);
   };
 
   return (
     <MainLayout>
-      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-mindful-warmNeutral py-12">
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-neutral-900 py-12">
         <div className="w-full max-w-md px-4">
           <Tabs defaultValue="patient" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="patient">Patient Login</TabsTrigger>
-              <TabsTrigger value="doctor">Doctor Login</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-neutral-800">
+              <TabsTrigger value="patient" className="data-[state=active]:bg-mindful-primary data-[state=active]:text-white">Patient Login</TabsTrigger>
+              <TabsTrigger value="doctor" className="data-[state=active]:bg-mindful-primary data-[state=active]:text-white">Doctor Login</TabsTrigger>
             </TabsList>
             
             <TabsContent value="patient">
-              <Card className="shadow-lg border-mindful-accent">
+              <Card className="shadow-lg border-mindful-accent bg-neutral-800 text-white">
                 <CardHeader className="space-y-1">
                   <CardTitle className="text-2xl font-bold text-center">Patient Login</CardTitle>
-                  <CardDescription className="text-center">
+                  <CardDescription className="text-center text-gray-400">
                     Enter your credentials to access your account
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handlePatientSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="patient-email">Email</Label>
+                      <Label htmlFor="patient-email" className="text-gray-300">Email</Label>
                       <Input
                         id="patient-email"
                         name="email"
@@ -99,11 +133,12 @@ const Login = () => {
                         value={patientForm.email}
                         onChange={handlePatientChange}
                         required
+                        className="bg-neutral-700 border-neutral-600 text-white"
                       />
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="patient-password">Password</Label>
+                        <Label htmlFor="patient-password" className="text-gray-300">Password</Label>
                         <Link 
                           to="/reset-password" 
                           className="text-sm text-mindful-primary hover:text-mindful-secondary"
@@ -119,6 +154,7 @@ const Login = () => {
                         value={patientForm.password}
                         onChange={handlePatientChange}
                         required
+                        className="bg-neutral-700 border-neutral-600 text-white"
                       />
                     </div>
                     <Button 
@@ -128,7 +164,7 @@ const Login = () => {
                     >
                       {isSubmitting ? "Logging in..." : "Sign In"}
                     </Button>
-                    <div className="text-center text-sm">
+                    <div className="text-center text-sm text-gray-400">
                       Don't have an account?{" "}
                       <Link to="/signup" className="text-mindful-primary hover:text-mindful-secondary font-medium">
                         Sign up
@@ -140,17 +176,17 @@ const Login = () => {
             </TabsContent>
 
             <TabsContent value="doctor">
-              <Card className="shadow-lg border-mindful-primary">
+              <Card className="shadow-lg border-mindful-primary bg-neutral-800 text-white">
                 <CardHeader className="space-y-1">
                   <CardTitle className="text-2xl font-bold text-center">Doctor Login</CardTitle>
-                  <CardDescription className="text-center">
+                  <CardDescription className="text-center text-gray-400">
                     Login to your professional account
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleDoctorSubmit} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="doctor-email">Professional Email</Label>
+                      <Label htmlFor="doctor-email" className="text-gray-300">Professional Email</Label>
                       <Input
                         id="doctor-email"
                         name="email"
@@ -159,11 +195,12 @@ const Login = () => {
                         value={doctorForm.email}
                         onChange={handleDoctorChange}
                         required
+                        className="bg-neutral-700 border-neutral-600 text-white"
                       />
                     </div>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="doctor-password">Password</Label>
+                        <Label htmlFor="doctor-password" className="text-gray-300">Password</Label>
                         <Link 
                           to="/reset-password" 
                           className="text-sm text-mindful-primary hover:text-mindful-secondary"
@@ -179,6 +216,7 @@ const Login = () => {
                         value={doctorForm.password}
                         onChange={handleDoctorChange}
                         required
+                        className="bg-neutral-700 border-neutral-600 text-white"
                       />
                     </div>
                     <Button 
@@ -188,7 +226,7 @@ const Login = () => {
                     >
                       {isSubmitting ? "Logging in..." : "Sign In"}
                     </Button>
-                    <div className="text-center text-sm">
+                    <div className="text-center text-sm text-gray-400">
                       Not registered as a doctor?{" "}
                       <Link to="/doctor-signup" className="text-mindful-primary hover:text-mindful-secondary font-medium">
                         Apply here

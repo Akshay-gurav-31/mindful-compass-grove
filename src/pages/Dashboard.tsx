@@ -1,256 +1,247 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { User, Settings, Calendar, Clock, FileText, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-
-  // Simulate user data - in a real app, this would come from your auth system
-  const [userData, setUserData] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    role: "patient" // or "doctor"
+  const navigate = useNavigate();
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: "",
+    bio: ""
   });
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setIsUploading(true);
-      // Simulate file upload
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setTimeout(() => {
-          setProfileImage(reader.result as string);
-          setIsUploading(false);
-          toast({
-            title: "Profile photo updated",
-            description: "Your profile photo has been successfully updated.",
-          });
-        }, 1000);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setProfileForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  const handleProfileSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: "Profile updated",
-      description: "Your profile information has been successfully updated.",
+      title: "Profile Updated",
+      description: "Your profile information has been saved."
     });
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
   };
 
   return (
     <MainLayout>
-      <div className="min-h-[calc(100vh-200px)] bg-mindful-warmNeutral py-12">
+      <div className="min-h-[calc(100vh-220px)] bg-neutral-900 py-8">
         <div className="mindful-container">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="flex flex-col md:flex-row gap-6">
             {/* Sidebar */}
-            <div className="md:col-span-1">
-              <Card className="shadow-md">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center space-y-4 mb-6">
-                    <div className="relative">
-                      <Avatar className="w-24 h-24 border-4 border-mindful-accent">
-                        <AvatarImage src={profileImage || ""} />
-                        <AvatarFallback className="bg-mindful-primary text-white text-xl">
-                          {userData.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <label 
-                        htmlFor="profile-photo" 
-                        className="absolute bottom-0 right-0 bg-mindful-primary hover:bg-mindful-secondary text-white rounded-full p-1 cursor-pointer"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
-                          <path d="m15 7 3 3"></path>
-                          <path d="M3 21 12 12"></path>
-                          <path d="M12 12 21 3"></path>
-                        </svg>
-                        <input 
-                          id="profile-photo" 
-                          type="file" 
-                          accept="image/*" 
-                          className="hidden" 
-                          onChange={handleFileChange}
-                          disabled={isUploading}
-                        />
-                      </label>
+            <div className="w-full md:w-64 space-y-4">
+              <Card className="dark-card">
+                <CardContent className="p-4">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="w-24 h-24 rounded-full bg-neutral-700 flex items-center justify-center text-3xl text-mindful-primary mb-4">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
                     </div>
-                    <div className="text-center">
-                      <h3 className="text-xl font-semibold">{userData.name}</h3>
-                      <p className="text-gray-500">{userData.email}</p>
-                      <span className="inline-block px-3 py-1 mt-2 text-xs font-medium rounded-full capitalize bg-mindful-accent text-mindful-primary">
-                        {userData.role}
-                      </span>
-                    </div>
+                    <h3 className="text-lg font-semibold">{user?.name || "User"}</h3>
+                    <p className="text-sm text-gray-400">{user?.email}</p>
+                    <p className="text-xs bg-mindful-primary text-white px-2 py-1 rounded mt-2 capitalize">
+                      {user?.type || "user"}
+                    </p>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div className="space-y-2">
-                    <Button 
-                      onClick={() => setActiveTab("dashboard")}
-                      variant={activeTab === "dashboard" ? "default" : "ghost"}
-                      className={`w-full justify-start ${activeTab === "dashboard" ? "bg-mindful-primary text-white" : ""}`}
+              <Card className="dark-card">
+                <CardContent className="p-0">
+                  <nav className="flex flex-col">
+                    <a href="#profile" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-mindful-primary">
+                      <User size={18} />
+                      <span>Profile</span>
+                    </a>
+                    <a href="#appointments" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+                      <Calendar size={18} />
+                      <span>Appointments</span>
+                    </a>
+                    <a href="#history" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+                      <Clock size={18} />
+                      <span>History</span>
+                    </a>
+                    <a href="#records" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+                      <FileText size={18} />
+                      <span>Records</span>
+                    </a>
+                    <a href="#settings" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+                      <Settings size={18} />
+                      <span>Settings</span>
+                    </a>
+                    <button 
+                      onClick={handleLogout} 
+                      className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent text-left text-red-400"
                     >
-                      Dashboard
-                    </Button>
-                    <Button 
-                      onClick={() => setActiveTab("profile")}
-                      variant={activeTab === "profile" ? "default" : "ghost"}
-                      className={`w-full justify-start ${activeTab === "profile" ? "bg-mindful-primary text-white" : ""}`}
-                    >
-                      Profile Settings
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        toast({
-                          title: "Logged out",
-                          description: "You have been successfully logged out.",
-                        });
-                        navigate("/login");
-                      }}
-                      variant="ghost"
-                      className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      Logout
-                    </Button>
-                  </div>
+                      <LogOut size={18} />
+                      <span>Logout</span>
+                    </button>
+                  </nav>
                 </CardContent>
               </Card>
             </div>
 
             {/* Main Content */}
-            <div className="md:col-span-3">
-              {activeTab === "dashboard" && (
-                <Card className="shadow-md">
-                  <CardHeader>
-                    <CardTitle>Dashboard</CardTitle>
-                    <CardDescription>
-                      Welcome to your personal dashboard at Mindful Grove.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-6 md:grid-cols-2">
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base font-medium">Upcoming Sessions</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-center py-6">
-                            <p className="text-muted-foreground">No upcoming sessions scheduled.</p>
-                            <Button 
-                              className="mt-4 mindful-btn-primary"
-                              onClick={() => navigate("/services")}
-                            >
-                              Book a Session
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-base font-medium">AI Chat Support</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-center py-6">
-                            <p className="text-muted-foreground">Need some immediate support?</p>
-                            <Button 
-                              className="mt-4 mindful-btn-primary"
-                              onClick={() => navigate("/chatbot")}
-                            >
-                              Start AI Chat
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+            <div className="flex-1">
+              <Tabs defaultValue="profile" className="w-full">
+                <TabsList className="mb-6 bg-neutral-800">
+                  <TabsTrigger value="profile" className="data-[state=active]:bg-mindful-primary data-[state=active]:text-white">
+                    Profile
+                  </TabsTrigger>
+                  <TabsTrigger value="appointments" className="data-[state=active]:bg-mindful-primary data-[state=active]:text-white">
+                    Appointments
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="data-[state=active]:bg-mindful-primary data-[state=active]:text-white">
+                    Settings
+                  </TabsTrigger>
+                </TabsList>
 
-              {activeTab === "profile" && (
-                <Card className="shadow-md">
-                  <CardHeader>
-                    <CardTitle>Profile Settings</CardTitle>
-                    <CardDescription>
-                      Manage your personal information and account settings.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <form onSubmit={handleProfileUpdate} className="space-y-6">
-                      <div className="space-y-4">
+                <TabsContent value="profile">
+                  <Card className="dark-card">
+                    <CardHeader>
+                      <CardTitle>Personal Information</CardTitle>
+                      <CardDescription className="text-gray-400">
+                        Update your personal details
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={handleProfileSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="name">Full Name</Label>
-                            <Input 
-                              id="name" 
-                              value={userData.name}
-                              onChange={(e) => setUserData({...userData, name: e.target.value})}
+                            <Label htmlFor="name" className="text-gray-300">Full Name</Label>
+                            <Input
+                              id="name"
+                              name="name"
+                              value={profileForm.name}
+                              onChange={handleProfileChange}
+                              className="dark-input"
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input 
-                              id="email" 
-                              type="email" 
-                              value={userData.email}
-                              onChange={(e) => setUserData({...userData, email: e.target.value})}
+                            <Label htmlFor="email" className="text-gray-300">Email</Label>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              value={profileForm.email}
+                              onChange={handleProfileChange}
+                              className="dark-input"
+                              disabled
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone" className="text-gray-300">Phone Number</Label>
+                            <Input
+                              id="phone"
+                              name="phone"
+                              value={profileForm.phone}
+                              onChange={handleProfileChange}
+                              className="dark-input"
                             />
                           </div>
                         </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="profile-photo-upload">Profile Photo</Label>
-                          <div className="flex items-center space-x-4">
-                            <Avatar className="w-16 h-16">
-                              <AvatarImage src={profileImage || ""} />
-                              <AvatarFallback className="bg-mindful-primary text-white">
-                                {userData.name.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <label className="cursor-pointer">
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                disabled={isUploading}
-                              >
-                                {isUploading ? "Uploading..." : "Change Photo"}
-                              </Button>
-                              <input 
-                                id="profile-photo-upload"
-                                type="file" 
-                                accept="image/*" 
-                                className="hidden" 
-                                onChange={handleFileChange} 
-                                disabled={isUploading}
-                              />
-                            </label>
-                          </div>
-                        </div>
-                      </div>
 
-                      <div className="flex justify-end">
+                        <div className="space-y-2">
+                          <Label htmlFor="bio" className="text-gray-300">About Me</Label>
+                          <Textarea
+                            id="bio"
+                            name="bio"
+                            value={profileForm.bio}
+                            onChange={handleProfileChange}
+                            rows={4}
+                            className="dark-input resize-none"
+                          />
+                        </div>
+
                         <Button type="submit" className="mindful-btn-primary">
                           Save Changes
                         </Button>
+                      </form>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="appointments">
+                  <Card className="dark-card">
+                    <CardHeader>
+                      <CardTitle>Your Appointments</CardTitle>
+                      <CardDescription className="text-gray-400">
+                        Manage your upcoming sessions
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-8">
+                        <p className="text-gray-400 mb-4">You don't have any appointments scheduled yet.</p>
+                        <Button className="mindful-btn-primary">Book a Consultation</Button>
                       </div>
-                    </form>
-                  </CardContent>
-                </Card>
-              )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="settings">
+                  <Card className="dark-card">
+                    <CardHeader>
+                      <CardTitle>Account Settings</CardTitle>
+                      <CardDescription className="text-gray-400">
+                        Manage your account preferences
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-gray-300">Email Notifications</Label>
+                        <div className="flex items-center space-x-2">
+                          <input type="checkbox" id="email-notify" className="rounded border-gray-600" />
+                          <Label htmlFor="email-notify" className="text-gray-400 text-sm cursor-pointer">
+                            Receive email notifications about appointments and updates
+                          </Label>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-gray-300">Change Password</Label>
+                        <Button variant="outline" className="border-neutral-600 text-white hover:bg-neutral-700">
+                          Update Password
+                        </Button>
+                      </div>
+                      
+                      <div className="pt-4 border-t border-neutral-700">
+                        <Button 
+                          variant="destructive" 
+                          className="bg-red-900 hover:bg-red-800 text-white"
+                          onClick={() => {
+                            toast({
+                              title: "Account Action",
+                              description: "This feature is not available in the demo.",
+                            });
+                          }}
+                        >
+                          Delete Account
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>
