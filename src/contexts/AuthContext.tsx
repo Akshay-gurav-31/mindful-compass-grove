@@ -31,6 +31,8 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+const AUTH_STORAGE_KEY = 'mindfulGroveUser';
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,12 +40,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     // Check for user in localStorage on component mount
-    const storedUser = localStorage.getItem('mindfulGroveUser');
+    const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
     if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      setIsAuthenticated(true);
-      setUserType(parsedUser.type);
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+        setUserType(parsedUser.type);
+      } catch (error) {
+        // If there's an error parsing the stored user data, clear it
+        console.error("Error parsing stored user data:", error);
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      }
     }
   }, []);
 
@@ -51,14 +59,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setUser(userData);
     setIsAuthenticated(true);
     setUserType(userData.type);
-    localStorage.setItem('mindfulGroveUser', JSON.stringify(userData));
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
     setUserType(null);
-    localStorage.removeItem('mindfulGroveUser');
+    localStorage.removeItem(AUTH_STORAGE_KEY);
   };
 
   return (

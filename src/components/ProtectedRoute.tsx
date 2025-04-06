@@ -11,10 +11,12 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, requiredUserType = 'both' }: ProtectedRouteProps) => {
   const { isAuthenticated, userType } = useAuth();
 
+  // Not authenticated - redirect to login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
+  // Check user type requirement
   if (requiredUserType !== 'both' && userType !== requiredUserType) {
     // Redirect doctor to doctor dashboard if trying to access patient pages
     if (userType === 'doctor') {
@@ -27,6 +29,7 @@ const ProtectedRoute = ({ children, requiredUserType = 'both' }: ProtectedRouteP
     }
   }
 
+  // User is authenticated and has correct user type
   return <>{children}</>;
 };
 

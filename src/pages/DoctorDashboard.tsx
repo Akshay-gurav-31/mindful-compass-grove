@@ -16,37 +16,42 @@ interface PatientRequest {
   message: string;
   status: 'pending' | 'accepted' | 'rejected';
   date: Date;
+  severity: 'low' | 'medium' | 'high';
+  patientAvatar?: string;
 }
 
 const DoctorDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Mock patient requests
+  // Mock patient requests with severity levels
   const [patientRequests, setPatientRequests] = useState<PatientRequest[]>([
     {
       id: "req1",
       patientName: "John Doe",
       patientId: "p123",
-      message: "I've been experiencing severe anxiety lately. Can we schedule a session?",
+      message: "I've been experiencing severe anxiety and panic attacks lately. Can we schedule an urgent session?",
       status: 'pending',
-      date: new Date(Date.now() - 86400000) // 1 day ago
+      date: new Date(Date.now() - 86400000), // 1 day ago
+      severity: 'high'
     },
     {
       id: "req2",
       patientName: "Emma Wilson",
       patientId: "p456",
-      message: "Would like to discuss my medication side effects.",
+      message: "Would like to discuss my medication side effects. I'm experiencing dizziness and nausea.",
       status: 'pending',
-      date: new Date(Date.now() - 172800000) // 2 days ago
+      date: new Date(Date.now() - 172800000), // 2 days ago
+      severity: 'medium'
     },
     {
       id: "req3",
       patientName: "Michael Brown",
       patientId: "p789",
-      message: "Need to follow up on my treatment plan.",
+      message: "Need to follow up on my treatment plan for depression. Feeling some improvement but still having issues.",
       status: 'accepted',
-      date: new Date(Date.now() - 259200000) // 3 days ago
+      date: new Date(Date.now() - 259200000), // 3 days ago
+      severity: 'medium'
     }
   ]);
 
@@ -84,6 +89,19 @@ const DoctorDashboard = () => {
     });
   };
 
+  const getSeverityBadge = (severity: 'low' | 'medium' | 'high') => {
+    switch (severity) {
+      case 'high':
+        return <Badge variant="outline" className="bg-red-950/30 text-red-400 border-red-800">Urgent</Badge>;
+      case 'medium':
+        return <Badge variant="outline" className="bg-orange-900/30 text-orange-400 border-orange-800">Medium</Badge>;
+      case 'low':
+        return <Badge variant="outline" className="bg-green-900/30 text-green-400 border-green-800">Low</Badge>;
+      default:
+        return null;
+    }
+  };
+
   return (
     <MainLayout>
       <div className="min-h-[calc(100vh-220px)] bg-neutral-900 py-8">
@@ -91,13 +109,13 @@ const DoctorDashboard = () => {
           <div className="flex flex-col md:flex-row gap-6">
             {/* Sidebar */}
             <div className="w-full md:w-64 space-y-4">
-              <Card className="dark-card">
+              <Card className="dark-card bg-neutral-800 border-neutral-700">
                 <CardContent className="p-4">
                   <div className="flex flex-col items-center text-center">
                     <div className="w-24 h-24 rounded-full bg-neutral-700 flex items-center justify-center text-3xl text-mindful-primary mb-4">
                       {user?.name ? user.name.charAt(0).toUpperCase() : "D"}
                     </div>
-                    <h3 className="text-lg font-semibold">{user?.name || "Doctor"}</h3>
+                    <h3 className="text-lg font-semibold text-white">{user?.name || "Doctor"}</h3>
                     <p className="text-sm text-gray-400">{user?.email}</p>
                     <p className="text-xs bg-mindful-primary text-white px-2 py-1 rounded mt-2 capitalize">
                       {user?.type || "doctor"}
@@ -106,26 +124,26 @@ const DoctorDashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="dark-card">
+              <Card className="dark-card bg-neutral-800 border-neutral-700">
                 <CardContent className="p-0">
                   <nav className="flex flex-col">
-                    <a href="#profile" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+                    <a href="#profile" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent text-gray-300">
                       <User size={18} />
                       <span>Profile</span>
                     </a>
-                    <a href="#requests" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-mindful-primary">
+                    <a href="#requests" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-mindful-primary bg-neutral-700/50 text-white">
                       <MessageSquare size={18} />
                       <span>Patient Requests</span>
                     </a>
-                    <a href="#appointments" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+                    <a href="#appointments" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent text-gray-300">
                       <Calendar size={18} />
                       <span>Appointments</span>
                     </a>
-                    <a href="#patients" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+                    <a href="#patients" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent text-gray-300">
                       <FileText size={18} />
                       <span>My Patients</span>
                     </a>
-                    <a href="#settings" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+                    <a href="#settings" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent text-gray-300">
                       <Settings size={18} />
                       <span>Settings</span>
                     </a>
@@ -150,9 +168,9 @@ const DoctorDashboard = () => {
                 </TabsList>
 
                 <TabsContent value="requests">
-                  <Card className="dark-card">
+                  <Card className="dark-card bg-neutral-800 border-neutral-700">
                     <CardHeader>
-                      <CardTitle>Patient Consultation Requests</CardTitle>
+                      <CardTitle className="text-white">Patient Consultation Requests</CardTitle>
                       <CardDescription className="text-gray-400">
                         Review and respond to patient requests
                       </CardDescription>
@@ -167,21 +185,30 @@ const DoctorDashboard = () => {
                           {patientRequests
                             .filter(req => req.status === 'pending')
                             .map(request => (
-                              <Card key={request.id} className="bg-neutral-800 border-neutral-700">
+                              <Card key={request.id} className="bg-neutral-800 border-neutral-700 shadow-md relative overflow-hidden">
+                                {request.severity === 'high' && (
+                                  <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+                                )}
+                                {request.severity === 'medium' && (
+                                  <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                                )}
                                 <CardContent className="p-4">
                                   <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-10 h-10 rounded-full bg-neutral-700 flex items-center justify-center text-sm">
+                                      <div className="w-12 h-12 rounded-full bg-neutral-700 flex items-center justify-center text-sm">
                                         {request.patientName.charAt(0)}
                                       </div>
                                       <div>
-                                        <h4 className="font-medium">{request.patientName}</h4>
+                                        <h4 className="font-medium text-white">{request.patientName}</h4>
                                         <p className="text-xs text-gray-400">{formatDate(request.date)}</p>
                                       </div>
                                     </div>
-                                    <Badge variant="outline" className="bg-yellow-900/30 text-yellow-400 border-yellow-800">
-                                      Pending
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="bg-yellow-900/30 text-yellow-400 border-yellow-800">
+                                        Pending
+                                      </Badge>
+                                      {getSeverityBadge(request.severity)}
+                                    </div>
                                   </div>
                                   <p className="text-sm text-gray-300 mb-4">{request.message}</p>
                                   <div className="flex justify-end gap-2">
@@ -212,9 +239,9 @@ const DoctorDashboard = () => {
                   </Card>
                   
                   {/* Accepted Requests */}
-                  <Card className="dark-card mt-6">
+                  <Card className="dark-card bg-neutral-800 border-neutral-700 mt-6">
                     <CardHeader>
-                      <CardTitle>Active Patients</CardTitle>
+                      <CardTitle className="text-white">Active Patients</CardTitle>
                       <CardDescription className="text-gray-400">
                         Patients you've accepted for consultation
                       </CardDescription>
@@ -229,15 +256,15 @@ const DoctorDashboard = () => {
                           {patientRequests
                             .filter(req => req.status === 'accepted')
                             .map(request => (
-                              <Card key={request.id} className="bg-neutral-800 border-neutral-700">
+                              <Card key={request.id} className="bg-neutral-800 border-neutral-700 shadow-md">
                                 <CardContent className="p-4">
                                   <div className="flex justify-between items-start mb-2">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-10 h-10 rounded-full bg-neutral-700 flex items-center justify-center text-sm">
+                                      <div className="w-12 h-12 rounded-full bg-neutral-700 flex items-center justify-center text-sm">
                                         {request.patientName.charAt(0)}
                                       </div>
                                       <div>
-                                        <h4 className="font-medium">{request.patientName}</h4>
+                                        <h4 className="font-medium text-white">{request.patientName}</h4>
                                         <p className="text-xs text-gray-400">{formatDate(request.date)}</p>
                                       </div>
                                     </div>
@@ -281,9 +308,9 @@ const DoctorDashboard = () => {
                 </TabsContent>
 
                 <TabsContent value="appointments">
-                  <Card className="dark-card">
+                  <Card className="dark-card bg-neutral-800 border-neutral-700">
                     <CardHeader>
-                      <CardTitle>Upcoming Appointments</CardTitle>
+                      <CardTitle className="text-white">Upcoming Appointments</CardTitle>
                       <CardDescription className="text-gray-400">
                         Manage your scheduled appointments
                       </CardDescription>
@@ -297,9 +324,9 @@ const DoctorDashboard = () => {
                 </TabsContent>
 
                 <TabsContent value="patients">
-                  <Card className="dark-card">
+                  <Card className="dark-card bg-neutral-800 border-neutral-700">
                     <CardHeader>
-                      <CardTitle>My Patients</CardTitle>
+                      <CardTitle className="text-white">My Patients</CardTitle>
                       <CardDescription className="text-gray-400">
                         List of all your patients
                       </CardDescription>
