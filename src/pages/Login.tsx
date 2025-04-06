@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import MainLayout from "@/components/layout/MainLayout";
 
 const Login = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [patientForm, setPatientForm] = useState({
@@ -50,6 +50,7 @@ const Login = () => {
         title: "Login Successful",
         description: "Welcome back to Mindful Grove!",
       });
+      navigate("/dashboard"); // Redirect to dashboard after successful login
     }, 1500);
   };
 
@@ -64,6 +65,7 @@ const Login = () => {
         title: "Professional Login Successful",
         description: "Welcome back to the Mindful Grove professional portal!",
       });
+      navigate("/dashboard"); // Redirect to dashboard after successful login
     }, 1500);
   };
 
