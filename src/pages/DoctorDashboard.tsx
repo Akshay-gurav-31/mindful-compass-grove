@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { User, Calendar as CalendarIcon, Clock, FileText, Settings, MessageSquare, Phone, VideoIcon, CheckCircle, XCircle, Users, LogOut } from "lucide-react";
+import { User, Calendar as CalendarIcon, Clock, FileText, Settings, MessageSquare, Phone, VideoIcon, CheckCircle, XCircle, Users, LogOut, Check, X } from "lucide-react";
 
 interface PatientRequest {
   id: string;
@@ -49,7 +48,6 @@ const DoctorDashboard = () => {
     bio: user?.bio || ""
   });
   
-  // Patient requests state
   const [patientRequests, setPatientRequests] = useState<PatientRequest[]>([
     {
       id: "req1",
@@ -57,7 +55,7 @@ const DoctorDashboard = () => {
       patientId: "p123",
       message: "I've been experiencing severe anxiety and panic attacks lately. Can we schedule an urgent session?",
       status: 'pending',
-      date: new Date(Date.now() - 86400000), // 1 day ago
+      date: new Date(Date.now() - 86400000),
       severity: 'high'
     },
     {
@@ -66,7 +64,7 @@ const DoctorDashboard = () => {
       patientId: "p456",
       message: "Would like to discuss my medication side effects. I'm experiencing dizziness and nausea.",
       status: 'pending',
-      date: new Date(Date.now() - 172800000), // 2 days ago
+      date: new Date(Date.now() - 172800000),
       severity: 'medium'
     },
     {
@@ -75,29 +73,26 @@ const DoctorDashboard = () => {
       patientId: "p789",
       message: "Need to follow up on my treatment plan for depression. Feeling some improvement but still having issues.",
       status: 'accepted',
-      date: new Date(Date.now() - 259200000), // 3 days ago
+      date: new Date(Date.now() - 259200000),
       severity: 'medium'
     }
   ]);
   
-  // My patients state
   const [myPatients, setMyPatients] = useState<Patient[]>([
     {
       id: "p789",
       name: "Michael Brown",
       contactInfo: "michael.b@example.com",
-      lastVisit: new Date(Date.now() - 259200000), // 3 days ago
+      lastVisit: new Date(Date.now() - 259200000),
       notes: "Patient showing signs of improvement with current medication.",
       status: 'active'
     }
   ]);
   
-  // New appointment state
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [appointmentNote, setAppointmentNote] = useState<string>("");
   
-  // Appointments state
   const [appointments, setAppointments] = useState<any[]>(
     doctorData?.appointments || []
   );
@@ -148,7 +143,6 @@ const DoctorDashboard = () => {
       )
     );
     
-    // Add the patient to my patients list if not already there
     const request = patientRequests.find(req => req.id === requestId);
     if (request) {
       const patientExists = myPatients.some(pat => pat.id === request.patientId);
@@ -220,7 +214,6 @@ const DoctorDashboard = () => {
     
     setAppointments(prev => [...prev, newAppointment]);
     
-    // Update patient's last visit
     setMyPatients(prev => 
       prev.map(pat => 
         pat.id === patient.id ? {...pat, lastVisit: selectedDate} : pat
@@ -232,7 +225,6 @@ const DoctorDashboard = () => {
       description: `Your appointment with ${patient.name} on ${format(selectedDate, 'MMMM dd, yyyy')} has been scheduled.`
     });
     
-    // Reset form fields
     setSelectedDate(undefined);
     setSelectedPatient("");
     setAppointmentNote("");
@@ -304,7 +296,6 @@ const DoctorDashboard = () => {
       <div className="min-h-[calc(100vh-220px)] bg-neutral-900 py-8">
         <div className="mindful-container">
           <div className="flex flex-col md:flex-row gap-6">
-            {/* Sidebar */}
             <div className="w-full md:w-64 space-y-4">
               <Card className="dark-card bg-neutral-800 border-neutral-700">
                 <CardContent className="p-4">
@@ -369,7 +360,6 @@ const DoctorDashboard = () => {
               </Card>
             </div>
 
-            {/* Main Content */}
             <div className="flex-1">
               <Tabs defaultValue="requests" className="w-full">
                 <TabsList className="mb-6 bg-neutral-800">
@@ -540,7 +530,6 @@ const DoctorDashboard = () => {
                     </CardContent>
                   </Card>
                   
-                  {/* Accepted Requests */}
                   <Card className="dark-card bg-neutral-800 border-neutral-700 mt-6">
                     <CardHeader>
                       <CardTitle className="text-white">Active Patients</CardTitle>
