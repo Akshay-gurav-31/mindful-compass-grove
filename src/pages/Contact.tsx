@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import MainLayout from "@/components/layout/MainLayout";
+import { storeContactFormSubmission } from "@/services/contactFormService";
 
 interface ContactFormData {
   name: string;
@@ -39,31 +40,17 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      // Store message data in localStorage
-      const existingMessages = localStorage.getItem('contactMessages');
-      const messages = existingMessages ? JSON.parse(existingMessages) : [];
+      // Store the message and get a downloadable text file
+      storeContactFormSubmission(formData);
       
-      // Add timestamp to the message
-      const messageWithTimestamp = {
-        ...formData,
-        timestamp: new Date().toISOString(),
-        id: `msg-${Date.now()}`
-      };
-      
-      messages.push(messageWithTimestamp);
-      localStorage.setItem('contactMessages', JSON.stringify(messages));
-      
-      // Additionally, you can log the message to console (for demonstration)
-      console.log("Contact form submission:", messageWithTimestamp);
-      
-      // Optionally, you could send this to an email using a real backend service
-      // For now, we'll simulate it with a timeout
+      // Additionally, log the message to console
+      console.log("Contact form submission:", formData);
       
       setTimeout(() => {
         setIsSubmitting(false);
         toast({
           title: "Message Sent",
-          description: "Thank you for reaching out. We'll respond shortly.",
+          description: "Thank you for reaching out. Your message has been saved and downloaded as a text file.",
         });
         setFormData({
           name: "",
@@ -83,7 +70,6 @@ const Contact = () => {
     }
   };
 
-  
   return (
     <MainLayout>
       {/* Hero Section */}

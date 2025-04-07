@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,11 +22,48 @@ const PatientRequestForm = ({ onRequestSent }: PatientRequestFormProps) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate request submission
+    // Create a text representation of the request
+    const requestText = `
+PATIENT REQUEST DETAILS
+======================
+Date: ${new Date().toLocaleString()}
+Patient: ${user?.name || 'Anonymous'}
+Patient ID: ${user?.id || 'Not logged in'}
+Urgency: ${severity.toUpperCase()}
+
+Message:
+${message}
+
+======================
+    `.trim();
+
+    // Save to localStorage for record keeping
+    const existingRequests = localStorage.getItem('patientRequests');
+    const requests = existingRequests ? JSON.parse(existingRequests) : [];
+    const newRequest = {
+      id: `req-${Date.now()}`,
+      userId: user?.id,
+      severity,
+      message,
+      timestamp: new Date().toISOString()
+    };
+    requests.push(newRequest);
+    localStorage.setItem('patientRequests', JSON.stringify(requests));
+
+    // Simulate request submission and download text file
     setTimeout(() => {
+      // Create and download a text file
+      const element = document.createElement('a');
+      const file = new Blob([requestText], {type: 'text/plain'});
+      element.href = URL.createObjectURL(file);
+      element.download = `patient-request-${newRequest.id}.txt`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+
       toast({
         title: "Request Sent",
-        description: "Your request has been sent to available doctors.",
+        description: "Your request has been sent to available doctors and downloaded as a text file.",
       });
       
       setMessage("");
