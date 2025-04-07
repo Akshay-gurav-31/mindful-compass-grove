@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,9 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import MainLayout from "@/components/layout/MainLayout";
 
+interface ContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
 const Contact = () => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ContactFormData>({
     name: "",
     email: "",
     subject: "",
@@ -28,26 +34,56 @@ const Contact = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      // Store message data in localStorage
+      const existingMessages = localStorage.getItem('contactMessages');
+      const messages = existingMessages ? JSON.parse(existingMessages) : [];
+      
+      // Add timestamp to the message
+      const messageWithTimestamp = {
+        ...formData,
+        timestamp: new Date().toISOString(),
+        id: `msg-${Date.now()}`
+      };
+      
+      messages.push(messageWithTimestamp);
+      localStorage.setItem('contactMessages', JSON.stringify(messages));
+      
+      // Additionally, you can log the message to console (for demonstration)
+      console.log("Contact form submission:", messageWithTimestamp);
+      
+      // Optionally, you could send this to an email using a real backend service
+      // For now, we'll simulate it with a timeout
+      
+      setTimeout(() => {
+        setIsSubmitting(false);
+        toast({
+          title: "Message Sent",
+          description: "Thank you for reaching out. We'll respond shortly.",
+        });
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          message: "",
+        });
+      }, 1000);
+    } catch (error) {
+      console.error("Error storing message:", error);
       setIsSubmitting(false);
       toast({
-        title: "Message Sent",
-        description: "Thank you for reaching out. We'll respond shortly.",
+        title: "Error",
+        description: "There was a problem sending your message. Please try again.",
+        variant: "destructive"
       });
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
-    }, 1500);
+    }
   };
 
+  
   return (
     <MainLayout>
       {/* Hero Section */}
@@ -76,7 +112,7 @@ const Contact = () => {
                 <Card className="border-l-4 border-l-mindful-primary">
                   <CardContent className="pt-6">
                     <h3 className="text-lg font-semibold mb-2">General Inquiries</h3>
-                    <p className="text-gray-600 mb-1">Email: info@mindfulgrove.com</p>
+                    <p className="text-gray-600 mb-1">Email: akshaygurav416115@gmail.com</p>
                     <p className="text-gray-600">Phone: (555) 123-4567</p>
                   </CardContent>
                 </Card>
@@ -84,7 +120,7 @@ const Contact = () => {
                 <Card className="border-l-4 border-l-mindful-secondary">
                   <CardContent className="pt-6">
                     <h3 className="text-lg font-semibold mb-2">Support</h3>
-                    <p className="text-gray-600 mb-1">Email: support@mindfulgrove.com</p>
+                    <p className="text-gray-600 mb-1">Email: akshaygurav416115@gmail.com</p>
                     <p className="text-gray-600">Phone: (555) 987-6543</p>
                   </CardContent>
                 </Card>
@@ -92,7 +128,7 @@ const Contact = () => {
                 <Card className="border-l-4 border-l-mindful-blue">
                   <CardContent className="pt-6">
                     <h3 className="text-lg font-semibold mb-2">Partnerships</h3>
-                    <p className="text-gray-600 mb-1">Email: partners@mindfulgrove.com</p>
+                    <p className="text-gray-600 mb-1">Email: akshaygurav416115@gmail.com</p>
                     <p className="text-gray-600">Phone: (555) 456-7890</p>
                   </CardContent>
                 </Card>
@@ -100,7 +136,7 @@ const Contact = () => {
                 <Card className="border-l-4 border-l-mindful-accent">
                   <CardContent className="pt-6">
                     <h3 className="text-lg font-semibold mb-2">Media Inquiries</h3>
-                    <p className="text-gray-600 mb-1">Email: media@mindfulgrove.com</p>
+                    <p className="text-gray-600 mb-1">Email: akshaygurav416115@gmail.com</p>
                     <p className="text-gray-600">Phone: (555) 234-5678</p>
                   </CardContent>
                 </Card>
