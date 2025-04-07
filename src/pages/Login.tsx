@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,8 +13,12 @@ import { useAuth } from "@/contexts/AuthContext";
 const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Get the user type from location state (if redirected from signup)
+  const defaultTab = location.state?.userType || "patient";
 
   const [patientForm, setPatientForm] = useState({
     email: "",
@@ -107,7 +111,7 @@ const Login = () => {
     <MainLayout>
       <div className="min-h-[calc(100vh-200px)] flex items-center justify-center bg-neutral-900 py-12">
         <div className="w-full max-w-md px-4">
-          <Tabs defaultValue="patient" className="w-full">
+          <Tabs defaultValue={defaultTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8 bg-neutral-800">
               <TabsTrigger value="patient" className="data-[state=active]:bg-mindful-primary data-[state=active]:text-white">Patient Login</TabsTrigger>
               <TabsTrigger value="doctor" className="data-[state=active]:bg-mindful-primary data-[state=active]:text-white">Doctor Login</TabsTrigger>

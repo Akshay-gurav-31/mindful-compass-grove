@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,7 @@ import MainLayout from "@/components/layout/MainLayout";
 
 const Signup = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [patientForm, setPatientForm] = useState({
@@ -79,6 +79,7 @@ const Signup = () => {
         title: "Account Created",
         description: "Welcome to Mindful Grove! You can now log in.",
       });
+      navigate("/login", { state: { userType: "patient" } });
     }, 1500);
   };
 
@@ -103,6 +104,7 @@ const Signup = () => {
         title: "Professional Application Submitted",
         description: "Thank you for applying. We'll review your credentials and contact you shortly.",
       });
+      navigate("/login", { state: { userType: "doctor" } });
     }, 1500);
   };
 
