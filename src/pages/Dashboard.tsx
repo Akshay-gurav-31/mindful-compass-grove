@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,9 +12,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { User, Settings, Calendar as CalendarIcon, Clock, FileText, LogOut, X, Check } from "lucide-react";
+import { User, Settings, Calendar as CalendarIcon, Clock, FileText, LogOut, X, Check, Upload, Download, Eye, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 
 interface AppointmentProps {
   id: string;
@@ -25,14 +26,26 @@ interface AppointmentProps {
   notes?: string;
 }
 
+interface MedicalRecord {
+  id: string;
+  name: string;
+  type: 'pdf' | 'image' | 'text';
+  uploadDate: Date;
+  url: string;
+}
+
 const Dashboard = () => {
   const { user, patientData, updateUserProfile, logout, addAppointment, cancelAppointment } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [profileForm, setProfileForm] = useState({
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
+    age: user?.age || "",
+    address: user?.address || "",
     bio: user?.bio || ""
   });
   
@@ -40,6 +53,27 @@ const Dashboard = () => {
   const [selectedDoctor, setSelectedDoctor] = useState<string>("");
   const [appointmentNote, setAppointmentNote] = useState<string>("");
   const [medicalHistory, setMedicalHistory] = useState<string>(patientData?.medicalHistory || "");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
+  // Medical records state
+  const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([
+    {
+      id: "rec1",
+      name: "Blood Test Results.pdf",
+      type: "pdf",
+      uploadDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      url: "#"
+    },
+    {
+      id: "rec2",
+      name: "Brain Scan.jpg",
+      type: "image",
+      uploadDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      url: "#"
+    }
+  ]);
   
   // Sample doctors for booking appointments
   const availableDoctors = [
@@ -54,6 +88,8 @@ const Dashboard = () => {
         name: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
+        age: user.age || "",
+        address: user.address || "",
         bio: user.bio || ""
       });
     }
@@ -76,6 +112,8 @@ const Dashboard = () => {
     updateUserProfile({
       name: profileForm.name,
       phone: profileForm.phone,
+      age: profileForm.age,
+      address: profileForm.address,
       bio: profileForm.bio
     });
     
@@ -154,6 +192,87 @@ const Dashboard = () => {
         description: "Your medical history has been saved."
       });
     }
+  };
+  
+  const handleUploadRecord = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      let fileType: 'pdf' | 'image' | 'text' = 'pdf';
+      
+      if (file.type.includes('image')) {
+        fileType = 'image';
+      } else if (file.type.includes('text')) {
+        fileType = 'text';
+      }
+      
+      const newRecord: MedicalRecord = {
+        id: `rec-${Date.now()}`,
+        name: file.name,
+        type: fileType,
+        uploadDate: new Date(),
+        url: URL.createObjectURL(file)
+      };
+      
+      setMedicalRecords(prev => [...prev, newRecord]);
+      
+      toast({
+        title: "File Uploaded",
+        description: `${file.name} has been uploaded successfully.`
+      });
+    }
+    
+    // Clear the input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+  
+  const handleDeleteRecord = (recordId: string) => {
+    setMedicalRecords(prev => prev.filter(rec => rec.id !== recordId));
+    
+    toast({
+      title: "Record Deleted",
+      description: "The medical record has been deleted."
+    });
+  };
+  
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Simple validation for demo
+    if (newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // In a real app, you would call an API to update the password
+    toast({
+      title: "Password Updated",
+      description: "Your password has been changed successfully."
+    });
+    
+    // Clear password fields
+    setOldPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
   };
 
   const handleLogout = () => {
@@ -282,6 +401,27 @@ const Dashboard = () => {
                               className="dark-input"
                             />
                           </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="age" className="text-gray-300">Age</Label>
+                            <Input
+                              id="age"
+                              name="age"
+                              type="number"
+                              value={profileForm.age}
+                              onChange={handleProfileChange}
+                              className="dark-input"
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="address" className="text-gray-300">Address</Label>
+                            <Input
+                              id="address"
+                              name="address"
+                              value={profileForm.address}
+                              onChange={handleProfileChange}
+                              className="dark-input"
+                            />
+                          </div>
                         </div>
 
                         <div className="space-y-2">
@@ -392,49 +532,119 @@ const Dashboard = () => {
                   
                   <Card className="dark-card">
                     <CardHeader>
-                      <CardTitle>Your Upcoming Appointments</CardTitle>
+                      <CardTitle>Your Appointments</CardTitle>
                       <CardDescription className="text-gray-400">
                         Manage your scheduled sessions
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {patientData?.appointments && patientData.appointments.length > 0 ? (
-                        <div className="space-y-4">
-                          {patientData.appointments
-                            .filter(apt => apt.status === 'scheduled')
-                            .map((appointment) => (
-                              <Card key={appointment.id} className="bg-neutral-800 border-neutral-700">
-                                <CardContent className="p-4">
-                                  <div className="flex justify-between items-start">
-                                    <div>
-                                      <h4 className="text-white font-medium">{appointment.doctorName}</h4>
-                                      <p className="text-gray-400 text-sm">{format(new Date(appointment.date), 'MMMM dd, yyyy')}</p>
-                                      {appointment.notes && (
-                                        <p className="text-gray-400 mt-2 text-sm italic">{appointment.notes}</p>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                      <Badge className="bg-green-800 text-white">Scheduled</Badge>
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        className="text-red-400 border-red-800 hover:bg-red-950 hover:text-red-300"
-                                        onClick={() => handleCancelAppointment(appointment.id)}
-                                      >
-                                        <X size={16} className="mr-1" /> Cancel
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <p className="text-gray-400 mb-4">You don't have any appointments scheduled yet.</p>
-                          <Button className="mindful-btn-primary">Book Your First Consultation</Button>
-                        </div>
-                      )}
+                      <Tabs defaultValue="upcoming" className="w-full">
+                        <TabsList className="mb-4 bg-neutral-700">
+                          <TabsTrigger value="upcoming" className="data-[state=active]:bg-green-600">
+                            Upcoming
+                          </TabsTrigger>
+                          <TabsTrigger value="past" className="data-[state=active]:bg-blue-600">
+                            Past
+                          </TabsTrigger>
+                          <TabsTrigger value="cancelled" className="data-[state=active]:bg-red-600">
+                            Cancelled
+                          </TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="upcoming">
+                          {patientData?.appointments && patientData.appointments.filter(apt => apt.status === 'scheduled').length > 0 ? (
+                            <div className="space-y-4">
+                              {patientData.appointments
+                                .filter(apt => apt.status === 'scheduled')
+                                .map((appointment) => (
+                                  <Card key={appointment.id} className="bg-neutral-800 border-neutral-700">
+                                    <CardContent className="p-4">
+                                      <div className="flex justify-between items-start">
+                                        <div>
+                                          <h4 className="text-white font-medium">{appointment.doctorName}</h4>
+                                          <p className="text-gray-400 text-sm">{format(new Date(appointment.date), 'MMMM dd, yyyy')}</p>
+                                          {appointment.notes && (
+                                            <p className="text-gray-400 mt-2 text-sm italic">{appointment.notes}</p>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                          <Badge className="bg-green-800 text-white">Scheduled</Badge>
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            className="text-red-400 border-red-800 hover:bg-red-950 hover:text-red-300"
+                                            onClick={() => handleCancelAppointment(appointment.id)}
+                                          >
+                                            <X size={16} className="mr-1" /> Cancel
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-gray-400 mb-4">You don't have any upcoming appointments.</p>
+                              <Button className="mindful-btn-primary">Book an Appointment</Button>
+                            </div>
+                          )}
+                        </TabsContent>
+                        
+                        <TabsContent value="past">
+                          {patientData?.appointments && patientData.appointments.filter(apt => apt.status === 'completed').length > 0 ? (
+                            <div className="space-y-4">
+                              {patientData.appointments
+                                .filter(apt => apt.status === 'completed')
+                                .map((appointment) => (
+                                  <Card key={appointment.id} className="bg-neutral-800 border-neutral-700">
+                                    <CardContent className="p-4">
+                                      <div className="flex justify-between items-start">
+                                        <div>
+                                          <h4 className="text-white font-medium">{appointment.doctorName}</h4>
+                                          <p className="text-gray-400 text-sm">{format(new Date(appointment.date), 'MMMM dd, yyyy')}</p>
+                                          {appointment.notes && (
+                                            <p className="text-gray-400 mt-2 text-sm">{appointment.notes}</p>
+                                          )}
+                                        </div>
+                                        <Badge className="bg-blue-800 text-white">Completed</Badge>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-400 text-center py-8">No past appointments found.</p>
+                          )}
+                        </TabsContent>
+                        
+                        <TabsContent value="cancelled">
+                          {patientData?.appointments && patientData.appointments.filter(apt => apt.status === 'cancelled').length > 0 ? (
+                            <div className="space-y-4">
+                              {patientData.appointments
+                                .filter(apt => apt.status === 'cancelled')
+                                .map((appointment) => (
+                                  <Card key={appointment.id} className="bg-neutral-800 border-neutral-700">
+                                    <CardContent className="p-4">
+                                      <div className="flex justify-between items-start">
+                                        <div>
+                                          <h4 className="text-white font-medium">{appointment.doctorName}</h4>
+                                          <p className="text-gray-400 text-sm">{format(new Date(appointment.date), 'MMMM dd, yyyy')}</p>
+                                          {appointment.notes && (
+                                            <p className="text-gray-400 mt-2 text-sm">{appointment.notes}</p>
+                                          )}
+                                        </div>
+                                        <Badge className="bg-red-800 text-white">Cancelled</Badge>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                            </div>
+                          ) : (
+                            <p className="text-gray-400 text-center py-8">No cancelled appointments found.</p>
+                          )}
+                        </TabsContent>
+                      </Tabs>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -502,37 +712,74 @@ const Dashboard = () => {
                     <CardHeader>
                       <CardTitle>Medical Records</CardTitle>
                       <CardDescription className="text-gray-400">
-                        View and manage your mental health records
+                        Upload and manage your medical documents
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-6">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-300 mb-4">Your Diagnoses</h3>
-                          <Card className="bg-neutral-800 border-neutral-700">
-                            <CardContent className="p-4 text-center">
-                              <p className="text-gray-400 py-4">No diagnoses have been recorded yet. They will appear here after your doctor updates your records.</p>
-                            </CardContent>
-                          </Card>
+                      <div className="mb-6">
+                        <div className="bg-neutral-800 border-2 border-dashed border-neutral-600 rounded-lg p-8 text-center">
+                          <Upload className="h-10 w-10 text-neutral-500 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-white mb-2">Upload Medical Records</h3>
+                          <p className="text-gray-400 mb-4">Drag and drop files here or click the button below</p>
+                          <Button 
+                            onClick={handleUploadRecord}
+                            className="mindful-btn-primary"
+                          >
+                            <Upload size={16} className="mr-2" /> Upload Files
+                          </Button>
+                          <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            className="hidden" 
+                            onChange={handleFileChange}
+                          />
+                          <p className="text-xs text-gray-500 mt-2">Supported formats: PDF, JPG, PNG, TXT</p>
                         </div>
-                        
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-300 mb-4">Treatment Plans</h3>
-                          <Card className="bg-neutral-800 border-neutral-700">
-                            <CardContent className="p-4 text-center">
-                              <p className="text-gray-400 py-4">No treatment plans have been recorded yet. They will appear here after your doctor creates one.</p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                        
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-300 mb-4">Progress Notes</h3>
-                          <Card className="bg-neutral-800 border-neutral-700">
-                            <CardContent className="p-4 text-center">
-                              <p className="text-gray-400 py-4">No progress notes have been recorded yet. Your doctor will update these after each session.</p>
-                            </CardContent>
-                          </Card>
-                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-semibold text-white mb-4">Your Medical Records</h3>
+                        {medicalRecords.length > 0 ? (
+                          <div className="space-y-4">
+                            {medicalRecords.map(record => (
+                              <Card key={record.id} className="bg-neutral-800 border-neutral-700">
+                                <CardContent className="p-4">
+                                  <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                      {record.type === 'pdf' && <FileText className="text-red-400" size={20} />}
+                                      {record.type === 'image' && <Upload className="text-blue-400" size={20} />}
+                                      {record.type === 'text' && <FileText className="text-green-400" size={20} />}
+                                      <div>
+                                        <h4 className="text-white font-medium">{record.name}</h4>
+                                        <p className="text-sm text-gray-400">Uploaded on {format(new Date(record.uploadDate), 'MMM dd, yyyy')}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Button variant="outline" size="sm" className="text-blue-400 border-blue-800">
+                                        <Eye size={16} className="mr-1" /> View
+                                      </Button>
+                                      <Button variant="outline" size="sm" className="text-green-400 border-green-800">
+                                        <Download size={16} className="mr-1" /> Download
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="text-red-400 border-red-800"
+                                        onClick={() => handleDeleteRecord(record.id)}
+                                      >
+                                        <Trash2 size={16} className="mr-1" /> Delete
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 bg-neutral-800 rounded-lg">
+                            <p className="text-gray-400">You haven't uploaded any medical records yet.</p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -546,31 +793,88 @@ const Dashboard = () => {
                         Manage your account preferences
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-gray-300">Email Notifications</Label>
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="email-notify" className="rounded border-gray-600" />
-                          <Label htmlFor="email-notify" className="text-gray-400 text-sm cursor-pointer">
-                            Receive email notifications about appointments and updates
-                          </Label>
+                    <CardContent className="space-y-8">
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-white">Change Password</h3>
+                        <form onSubmit={handlePasswordChange} className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="old-password" className="text-gray-300">Current Password</Label>
+                            <Input
+                              id="old-password"
+                              type="password"
+                              value={oldPassword}
+                              onChange={(e) => setOldPassword(e.target.value)}
+                              className="dark-input"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="new-password" className="text-gray-300">New Password</Label>
+                            <Input
+                              id="new-password"
+                              type="password"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              className="dark-input"
+                              required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="confirm-password" className="text-gray-300">Confirm New Password</Label>
+                            <Input
+                              id="confirm-password"
+                              type="password"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                              className="dark-input"
+                              required
+                            />
+                          </div>
+                          <Button type="submit" className="mindful-btn-primary">
+                            Update Password
+                          </Button>
+                        </form>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-white">Notification Settings</h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <input type="checkbox" id="email-notify" className="rounded border-gray-600" defaultChecked />
+                            <Label htmlFor="email-notify" className="text-gray-400 text-sm cursor-pointer">
+                              Receive email notifications about appointments
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input type="checkbox" id="sms-notify" className="rounded border-gray-600" defaultChecked />
+                            <Label htmlFor="sms-notify" className="text-gray-400 text-sm cursor-pointer">
+                              Receive SMS reminders for upcoming appointments
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input type="checkbox" id="updates-notify" className="rounded border-gray-600" />
+                            <Label htmlFor="updates-notify" className="text-gray-400 text-sm cursor-pointer">
+                              Receive product updates and newsletters
+                            </Label>
+                          </div>
                         </div>
                       </div>
                       
-                      <div className="space-y-2">
-                        <Label className="text-gray-300">Change Password</Label>
-                        <Button variant="outline" className="border-neutral-600 text-white hover:bg-neutral-700">
-                          Update Password
-                        </Button>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label className="text-gray-300">Privacy Settings</Label>
-                        <div className="flex items-center space-x-2">
-                          <input type="checkbox" id="data-share" className="rounded border-gray-600" checked />
-                          <Label htmlFor="data-share" className="text-gray-400 text-sm cursor-pointer">
-                            Share my data only with my assigned healthcare providers
-                          </Label>
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-white">Privacy Settings</h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <input type="checkbox" id="data-share" className="rounded border-gray-600" defaultChecked />
+                            <Label htmlFor="data-share" className="text-gray-400 text-sm cursor-pointer">
+                              Share my data only with my assigned healthcare providers
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input type="checkbox" id="anonymous-data" className="rounded border-gray-600" />
+                            <Label htmlFor="anonymous-data" className="text-gray-400 text-sm cursor-pointer">
+                              Allow anonymous data usage for service improvement
+                            </Label>
+                          </div>
                         </div>
                       </div>
                       

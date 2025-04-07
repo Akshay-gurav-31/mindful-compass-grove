@@ -8,6 +8,8 @@ interface User {
   type: 'patient' | 'doctor';
   profileImage?: string;
   phone?: string;
+  age?: string;
+  address?: string;
   bio?: string;
   specialization?: string; // For doctors
   medicalHistory?: string; // For patients
@@ -18,6 +20,7 @@ interface DoctorData {
   specialization: string;
   patients: string[]; // IDs of patients
   appointments: Appointment[];
+  patientRequests: PatientRequest[];
 }
 
 // Patient specific interface
@@ -25,6 +28,7 @@ interface PatientData {
   medicalHistory?: string;
   appointments: Appointment[];
   doctor?: string; // ID of assigned doctor
+  medicalRecords?: MedicalRecord[];
 }
 
 // Appointment interface
@@ -37,6 +41,26 @@ interface Appointment {
   date: Date;
   status: 'scheduled' | 'completed' | 'cancelled';
   notes?: string;
+}
+
+// Patient request interface
+interface PatientRequest {
+  id: string;
+  patientName: string;
+  patientId: string;
+  message: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  date: Date;
+  severity: 'low' | 'medium' | 'high';
+}
+
+// Medical record interface
+interface MedicalRecord {
+  id: string;
+  name: string;
+  type: 'pdf' | 'image' | 'text';
+  uploadDate: Date;
+  url: string;
 }
 
 interface AuthContextType {
@@ -119,13 +143,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 date: new Date(apt.date)
               }));
             }
+            // Convert date strings in patient requests
+            if (parsedDoctorData.patientRequests) {
+              parsedDoctorData.patientRequests = parsedDoctorData.patientRequests.map((req: any) => ({
+                ...req,
+                date: new Date(req.date)
+              }));
+            }
             setDoctorData(parsedDoctorData);
           } else {
             // Initialize doctor data
             const initialDoctorData: DoctorData = {
               specialization: parsedUser.specialization || '',
               patients: [],
-              appointments: []
+              appointments: [],
+              patientRequests: []
             };
             setDoctorData(initialDoctorData);
             localStorage.setItem(DOCTOR_DATA_KEY, JSON.stringify(initialDoctorData));
@@ -141,12 +173,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 date: new Date(apt.date)
               }));
             }
+            // Convert date strings in medical records if any
+            if (parsedPatientData.medicalRecords) {
+              parsedPatientData.medicalRecords = parsedPatientData.medicalRecords.map((rec: any) => ({
+                ...rec,
+                uploadDate: new Date(rec.uploadDate)
+              }));
+            }
             setPatientData(parsedPatientData);
           } else {
             // Initialize patient data
             const initialPatientData: PatientData = {
               medicalHistory: '',
-              appointments: []
+              appointments: [],
+              medicalRecords: []
             };
             setPatientData(initialPatientData);
             localStorage.setItem(PATIENT_DATA_KEY, JSON.stringify(initialPatientData));
@@ -170,14 +210,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const doctorDataToStore: DoctorData = additionalData || {
         specialization: userData.specialization || '',
         patients: [],
-        appointments: []
+        appointments: [],
+        patientRequests: []
       };
       setDoctorData(doctorDataToStore);
       localStorage.setItem(DOCTOR_DATA_KEY, JSON.stringify(doctorDataToStore));
     } else if (userData.type === 'patient') {
       const patientDataToStore: PatientData = additionalData || {
         medicalHistory: '',
-        appointments: []
+        appointments: [],
+        medicalRecords: []
       };
       setPatientData(patientDataToStore);
       localStorage.setItem(PATIENT_DATA_KEY, JSON.stringify(patientDataToStore));
@@ -245,10 +287,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setPatientData(updatedPatientData);
       localStorage.setItem(PATIENT_DATA_KEY, JSON.stringify(updatedPatientData));
     }
-  };
-
-  const getAvailableDoctors = () => {
-    return sampleDoctors;
   };
 
   return (
