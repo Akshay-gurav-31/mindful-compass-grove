@@ -6,13 +6,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { downloadAsTextFile, generateTextExport } from "@/services/contactFormService";
 
 interface PatientRequestFormProps {
   onRequestSent?: () => void;
 }
 
 const PatientRequestForm = ({ onRequestSent }: PatientRequestFormProps) => {
-  const { user } = useAuth();
+  const { user, patientData } = useAuth();
   const { toast } = useToast();
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState<"low" | "medium" | "high">("medium");
@@ -22,7 +23,20 @@ const PatientRequestForm = ({ onRequestSent }: PatientRequestFormProps) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Create a text representation of the request
+    // Create a new request object
+    const newRequest = {
+      id: `req-${Date.now()}`,
+      userId: user?.id || 'anonymous',
+      patientName: user?.name || 'Anonymous',
+      patientId: user?.id || 'Not logged in',
+      message,
+      severity,
+      status: 'pending' as const,
+      date: new Date(),
+      timestamp: new Date().toISOString()
+    };
+
+    // Create text representation of the request
     const requestText = `
 PATIENT REQUEST DETAILS
 ======================
@@ -40,38 +54,31 @@ ${message}
     // Save to localStorage for record keeping
     const existingRequests = localStorage.getItem('patientRequests');
     const requests = existingRequests ? JSON.parse(existingRequests) : [];
-    const newRequest = {
-      id: `req-${Date.now()}`,
-      userId: user?.id,
-      severity,
-      message,
-      timestamp: new Date().toISOString()
-    };
     requests.push(newRequest);
     localStorage.setItem('patientRequests', JSON.stringify(requests));
 
-    // Simulate request submission and download text file
-    setTimeout(() => {
-      // Create and download a text file
-      const element = document.createElement('a');
-      const file = new Blob([requestText], {type: 'text/plain'});
-      element.href = URL.createObjectURL(file);
-      element.download = `patient-request-${newRequest.id}.txt`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+    // Also save to doctor's requests in localStorage if assigned doctor exists
+    if (patientData?.doctor) {
+      const doctorRequestsKey = `doctorRequests-${patientData.doctor}`;
+      const existingDoctorRequests = localStorage.getItem(doctorRequestsKey);
+      const doctorRequests = existingDoctorRequests ? JSON.parse(existingDoctorRequests) : [];
+      doctorRequests.push(newRequest);
+      localStorage.setItem(doctorRequestsKey, JSON.stringify(doctorRequests));
+    }
 
-      toast({
-        title: "Request Sent",
-        description: "Your request has been sent to available doctors and downloaded as a text file.",
-      });
-      
-      setMessage("");
-      setIsSubmitting(false);
-      if (onRequestSent) {
-        onRequestSent();
-      }
-    }, 1000);
+    // Create and download a text file for record keeping
+    downloadAsTextFile(requestText, `patient-request-${newRequest.id}.txt`);
+
+    toast({
+      title: "Request Sent",
+      description: "Your request has been sent to available doctors and downloaded as a text file for your records.",
+    });
+    
+    setMessage("");
+    setIsSubmitting(false);
+    if (onRequestSent) {
+      onRequestSent();
+    }
   };
 
   return (

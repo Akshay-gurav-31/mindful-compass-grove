@@ -42,7 +42,7 @@ export const storeContactFormSubmission = (formData: Omit<ContactFormData, 'id' 
 /**
  * Generates a text export of a contact form submission
  */
-const generateTextExport = (formData: ContactFormData): string => {
+export const generateTextExport = (formData: ContactFormData): string => {
   return `
 MINDFUL GROVE CONTACT FORM SUBMISSION
 =====================================
@@ -70,7 +70,7 @@ This message was submitted through the Mindful Grove contact form.
 /**
  * Creates and downloads a text file containing the provided content
  */
-const downloadAsTextFile = (content: string, filename: string) => {
+export const downloadAsTextFile = (content: string, filename: string) => {
   const element = document.createElement('a');
   const file = new Blob([content], {type: 'text/plain'});
   element.href = URL.createObjectURL(file);
