@@ -26,12 +26,24 @@ export const storeContactFormSubmission = (formData: Omit<ContactFormData, 'id' 
   // Store in localStorage
   const existingMessages = localStorage.getItem('contactMessages');
   const messages = existingMessages ? JSON.parse(existingMessages) : [];
-  messages.push(messageWithMetadata);
-  localStorage.setItem('contactMessages', JSON.stringify(messages));
-
-  // Generate text version for logging (no longer downloading)
-  const textExport = generateTextExport(messageWithMetadata);
-  console.log("Contact form submission saved:", textExport);
+  
+  // Check for duplicates by comparing email and message content
+  const isDuplicate = messages.some(
+    (msg: ContactFormData) => 
+      msg.email === messageWithMetadata.email && 
+      msg.message === messageWithMetadata.message
+  );
+  
+  if (!isDuplicate) {
+    messages.push(messageWithMetadata);
+    localStorage.setItem('contactMessages', JSON.stringify(messages));
+    
+    // Generate text version for logging
+    const textExport = generateTextExport(messageWithMetadata);
+    console.log("Contact form submission saved:", textExport);
+  } else {
+    console.log("Duplicate submission detected and prevented");
+  }
 
   // Return the new message ID
   return messageWithMetadata.id;
@@ -63,15 +75,6 @@ ${formData.message}
 =====================================
 This message was submitted through the Mindful Grove contact form.
   `.trim();
-};
-
-/**
- * Creates and downloads a text file containing the provided content
- * Note: Function kept for backward compatibility but no longer used
- */
-export const downloadAsTextFile = (content: string, filename: string) => {
-  // Function kept for backward compatibility
-  console.log(`File would have been downloaded: ${filename}`);
 };
 
 /**

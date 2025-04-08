@@ -12,6 +12,18 @@ interface PatientRequestFormProps {
   onRequestSent?: () => void;
 }
 
+export interface PatientRequestData {
+  id: string;
+  userId: string;
+  patientName: string;
+  patientId: string;
+  message: string;
+  severity: "low" | "medium" | "high";
+  status: 'pending' | 'accepted' | 'rejected';
+  date: Date;
+  timestamp: string;
+}
+
 const PatientRequestForm = ({ onRequestSent }: PatientRequestFormProps) => {
   const { user, patientData } = useAuth();
   const { toast } = useToast();
@@ -24,7 +36,7 @@ const PatientRequestForm = ({ onRequestSent }: PatientRequestFormProps) => {
     setIsSubmitting(true);
 
     // Create a new request object
-    const newRequest = {
+    const newRequest: PatientRequestData = {
       id: `req-${Date.now()}`,
       userId: user?.id || 'anonymous',
       patientName: user?.name || 'Anonymous',
@@ -54,31 +66,49 @@ ${message}
     // Save to localStorage for record keeping
     const existingRequests = localStorage.getItem('patientRequests');
     const requests = existingRequests ? JSON.parse(existingRequests) : [];
-    requests.push(newRequest);
-    localStorage.setItem('patientRequests', JSON.stringify(requests));
-
-    // Also save to doctor's requests in localStorage if assigned doctor exists
-    if (patientData?.doctor) {
-      const doctorRequestsKey = `doctorRequests-${patientData.doctor}`;
-      const existingDoctorRequests = localStorage.getItem(doctorRequestsKey);
-      const doctorRequests = existingDoctorRequests ? JSON.parse(existingDoctorRequests) : [];
-      doctorRequests.push(newRequest);
-      localStorage.setItem(doctorRequestsKey, JSON.stringify(doctorRequests));
-    }
-
-    // Log the request (instead of downloading)
-    console.log("Patient request saved:", newRequest);
-
-    toast({
-      title: "Request Sent",
-      description: "Your request has been sent to available doctors.",
-    });
     
-    setMessage("");
-    setIsSubmitting(false);
-    if (onRequestSent) {
-      onRequestSent();
+    // Check for duplicate requests
+    const isDuplicate = requests.some(
+      (req: PatientRequestData) => 
+        req.userId === newRequest.userId && 
+        req.message === newRequest.message &&
+        Math.abs(new Date(req.timestamp).getTime() - new Date(newRequest.timestamp).getTime()) < 300000 // Within 5 minutes
+    );
+    
+    if (!isDuplicate) {
+      requests.push(newRequest);
+      localStorage.setItem('patientRequests', JSON.stringify(requests));
+      
+      // Also save to doctor's requests in localStorage if assigned doctor exists
+      if (patientData?.doctor) {
+        const doctorRequestsKey = `doctorRequests-${patientData.doctor}`;
+        const existingDoctorRequests = localStorage.getItem(doctorRequestsKey);
+        const doctorRequests = existingDoctorRequests ? JSON.parse(existingDoctorRequests) : [];
+        doctorRequests.push(newRequest);
+        localStorage.setItem(doctorRequestsKey, JSON.stringify(doctorRequests));
+      }
+      
+      // Log the request instead of downloading
+      console.log("Patient request saved:", newRequest);
+      
+      toast({
+        title: "Request Sent",
+        description: "Your request has been sent to available doctors.",
+      });
+      
+      setMessage("");
+      
+      if (onRequestSent) {
+        onRequestSent();
+      }
+    } else {
+      toast({
+        title: "Request Already Sent",
+        description: "A similar request was recently submitted.",
+      });
     }
+    
+    setIsSubmitting(false);
   };
 
   return (
