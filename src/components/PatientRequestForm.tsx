@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { downloadAsTextFile, generateTextExport } from "@/services/contactFormService";
 
 interface PatientRequestFormProps {
   onRequestSent?: () => void;
@@ -66,12 +66,12 @@ ${message}
       localStorage.setItem(doctorRequestsKey, JSON.stringify(doctorRequests));
     }
 
-    // Create and download a text file for record keeping
-    downloadAsTextFile(requestText, `patient-request-${newRequest.id}.txt`);
+    // Log the request (instead of downloading)
+    console.log("Patient request saved:", newRequest);
 
     toast({
       title: "Request Sent",
-      description: "Your request has been sent to available doctors and downloaded as a text file for your records.",
+      description: "Your request has been sent to available doctors.",
     });
     
     setMessage("");

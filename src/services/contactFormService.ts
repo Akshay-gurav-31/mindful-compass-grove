@@ -11,7 +11,7 @@ export interface ContactFormData {
 }
 
 /**
- * Stores a contact form submission in local storage and exports it as text
+ * Stores a contact form submission in local storage
  * @param formData The contact form data to store
  * @returns The ID of the stored submission
  */
@@ -29,11 +29,9 @@ export const storeContactFormSubmission = (formData: Omit<ContactFormData, 'id' 
   messages.push(messageWithMetadata);
   localStorage.setItem('contactMessages', JSON.stringify(messages));
 
-  // Generate exportable text version
+  // Generate text version for logging (no longer downloading)
   const textExport = generateTextExport(messageWithMetadata);
-  
-  // Create and offer download of text file
-  downloadAsTextFile(textExport, `contact-submission-${messageWithMetadata.id}.txt`);
+  console.log("Contact form submission saved:", textExport);
 
   // Return the new message ID
   return messageWithMetadata.id;
@@ -69,15 +67,11 @@ This message was submitted through the Mindful Grove contact form.
 
 /**
  * Creates and downloads a text file containing the provided content
+ * Note: Function kept for backward compatibility but no longer used
  */
 export const downloadAsTextFile = (content: string, filename: string) => {
-  const element = document.createElement('a');
-  const file = new Blob([content], {type: 'text/plain'});
-  element.href = URL.createObjectURL(file);
-  element.download = filename;
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
+  // Function kept for backward compatibility
+  console.log(`File would have been downloaded: ${filename}`);
 };
 
 /**
