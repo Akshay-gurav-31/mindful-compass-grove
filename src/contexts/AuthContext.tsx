@@ -2,6 +2,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { Database } from '@/integrations/supabase/types';
+
+// Define types for database tables
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+type DoctorDataRow = Database['public']['Tables']['doctor_data']['Row'];
+type PatientDataRow = Database['public']['Tables']['patient_data']['Row'];
+type AppointmentRow = Database['public']['Tables']['appointments']['Row'];
+type PatientRequestRow = Database['public']['Tables']['patient_requests']['Row'];
+type MedicalRecordRow = Database['public']['Tables']['medical_records']['Row'];
 
 interface User {
   id: string;
@@ -144,7 +153,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   };
                   
                   setUser(userData);
-                  setUserType(profileData.type);
+                  setUserType(profileData.type as 'patient' | 'doctor');
                   
                   // Load additional data based on user type
                   if (profileData.type === 'doctor') {
@@ -204,7 +213,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               };
               
               setUser(userData);
-              setUserType(profileData.type);
+              setUserType(profileData.type as 'patient' | 'doctor');
               
               // Load additional data based on user type
               if (profileData.type === 'doctor') {
