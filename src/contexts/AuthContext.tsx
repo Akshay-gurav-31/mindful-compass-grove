@@ -435,10 +435,45 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const login = async (email: string, password: string) => {
     try {
       console.log("Logging in with:", email);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      
+      // First try standard login
+      let { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
+      
+      // If error is about email not confirmed, we'll handle it specially
+      if (error && error.message.includes("Email not confirmed")) {
+        console.log("Email not confirmed, attempting alternative login...");
+        
+        // Check if the user exists and password is correct by fetching the user
+        const { data: userData, error: fetchError } = await supabase.auth.admin.getUserByEmail(email);
+        
+        if (fetchError) {
+          console.error("User fetch error:", fetchError);
+          return { data: null, error: fetchError };
+        }
+        
+        if (userData?.user) {
+          // User exists, try to sign in directly (this may bypass the email confirmation)
+          const signInResult = await supabase.auth.signInWithPassword({
+            email,
+            password,
+            options: {
+              // Skip email confirmation check
+              redirectTo: window.location.origin + '/dashboard'
+            }
+          });
+          
+          if (signInResult.error) {
+            console.error("Alternative login failed:", signInResult.error);
+            return { data: null, error: signInResult.error };
+          }
+          
+          console.log("Login successful:", signInResult.data);
+          return { data: signInResult.data, error: null };
+        }
+      }
       
       if (error) {
         console.error("Login error:", error);

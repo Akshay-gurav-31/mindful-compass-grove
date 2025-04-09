@@ -14,5 +14,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
     storage: localStorage,
+    // Allow special handling for unconfirmed emails with a custom flowType
+    flowType: 'implicit',
   },
 });

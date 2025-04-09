@@ -73,9 +73,18 @@ const Login = () => {
       
       if (error) {
         console.error("Login error:", error);
+        let errorMessage = error.message || "Invalid email or password. Please try again.";
+        
+        // Handle specific errors with more user-friendly messages
+        if (errorMessage.includes("Email not confirmed")) {
+          errorMessage = "Please check your email and confirm your account, or try again.";
+        } else if (errorMessage.includes("Invalid login credentials")) {
+          errorMessage = "The email or password you entered is incorrect.";
+        }
+        
         toast({
           title: "Login Failed",
-          description: error.message || "Invalid email or password. Please try again.",
+          description: errorMessage,
           variant: "destructive",
         });
         return;
@@ -91,7 +100,7 @@ const Login = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid credentials. Please try again.",
+          description: "Could not authenticate. Please try again.",
           variant: "destructive",
         });
       }
@@ -127,9 +136,18 @@ const Login = () => {
       
       if (error) {
         console.error("Login error:", error);
+        let errorMessage = error.message || "Invalid email or password. Please try again.";
+        
+        // Handle specific errors with more user-friendly messages
+        if (errorMessage.includes("Email not confirmed")) {
+          errorMessage = "Please check your email and confirm your account, or try again.";
+        } else if (errorMessage.includes("Invalid login credentials")) {
+          errorMessage = "The email or password you entered is incorrect.";
+        }
+        
         toast({
           title: "Login Failed",
-          description: error.message || "Invalid email or password. Please try again.",
+          description: errorMessage,
           variant: "destructive",
         });
         return;
@@ -145,7 +163,7 @@ const Login = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: "Invalid credentials. Please try again.",
+          description: "Could not authenticate. Please try again.",
           variant: "destructive",
         });
       }
