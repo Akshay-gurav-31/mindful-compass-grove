@@ -1,5 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -69,9 +71,10 @@ interface AuthContextType {
   userType: 'patient' | 'doctor' | null;
   doctorData: DoctorData | null;
   patientData: PatientData | null;
-  login: (user: User, additionalData?: any) => void;
-  logout: () => void;
-  updateUserProfile: (data: Partial<User>) => void;
+  login: (email: string, password: string) => Promise<{ error: any | null; data: any | null }>;
+  signup: (userData: any, password: string) => Promise<{ error: any | null; data: any | null }>;
+  logout: () => Promise<void>;
+  updateUserProfile: (data: Partial<User>) => Promise<void>;
   addAppointment: (appointment: Appointment) => void;
   cancelAppointment: (appointmentId: string) => void;
 }
@@ -90,158 +93,388 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const AUTH_STORAGE_KEY = 'mindfulGroveUser';
 const DOCTOR_DATA_KEY = 'mindfulGroveDoctor';
 const PATIENT_DATA_KEY = 'mindfulGrovePatient';
 
-// Sample doctors data for demonstration
-const sampleDoctors = [
-  {
-    id: "dr-smith",
-    name: "Dr. Smith",
-    email: "dr.smith@example.com",
-    specialization: "Psychiatrist",
-    profileImage: "",
-    type: "doctor" as const
-  },
-  {
-    id: "dr-jones",
-    name: "Dr. Jones",
-    email: "dr.jones@example.com",
-    specialization: "Psychologist",
-    profileImage: "",
-    type: "doctor" as const
-  }
-];
-
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userType, setUserType] = useState<'patient' | 'doctor' | null>(null);
   const [doctorData, setDoctorData] = useState<DoctorData | null>(null);
   const [patientData, setPatientData] = useState<PatientData | null>(null);
 
   useEffect(() => {
-    // Check for user in localStorage on component mount
-    const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-        setUserType(parsedUser.type);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        setSession(newSession);
         
-        // Load additional data based on user type
-        if (parsedUser.type === 'doctor') {
-          const storedDoctorData = localStorage.getItem(DOCTOR_DATA_KEY);
-          if (storedDoctorData) {
-            const parsedDoctorData = JSON.parse(storedDoctorData);
-            // Convert date strings back to Date objects in appointments
-            if (parsedDoctorData.appointments) {
-              parsedDoctorData.appointments = parsedDoctorData.appointments.map((apt: any) => ({
-                ...apt,
-                date: new Date(apt.date)
-              }));
+        if (newSession) {
+          setIsAuthenticated(true);
+          
+          // Fetch user profile data
+          setTimeout(async () => {
+            if (newSession.user?.id) {
+              try {
+                const { data: profileData, error } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', newSession.user.id)
+                  .single();
+                
+                if (error) {
+                  console.error('Error fetching profile:', error);
+                  return;
+                }
+                
+                if (profileData) {
+                  const userData: User = {
+                    id: profileData.id,
+                    email: profileData.email,
+                    name: profileData.name || '',
+                    type: profileData.type as 'patient' | 'doctor',
+                    profileImage: profileData.profile_image,
+                    phone: profileData.phone,
+                    age: profileData.age,
+                    address: profileData.address,
+                    bio: profileData.bio,
+                    specialization: profileData.specialization,
+                    medicalHistory: profileData.medical_history
+                  };
+                  
+                  setUser(userData);
+                  setUserType(profileData.type);
+                  
+                  // Load additional data based on user type
+                  if (profileData.type === 'doctor') {
+                    loadDoctorData(userData.id);
+                  } else if (profileData.type === 'patient') {
+                    loadPatientData(userData.id);
+                  }
+                }
+              } catch (error) {
+                console.error('Error in auth state change:', error);
+              }
             }
-            // Convert date strings in patient requests
-            if (parsedDoctorData.patientRequests) {
-              parsedDoctorData.patientRequests = parsedDoctorData.patientRequests.map((req: any) => ({
-                ...req,
-                date: new Date(req.date)
-              }));
-            }
-            setDoctorData(parsedDoctorData);
-          } else {
-            // Initialize doctor data
-            const initialDoctorData: DoctorData = {
-              specialization: parsedUser.specialization || '',
-              patients: [],
-              appointments: [],
-              patientRequests: []
-            };
-            setDoctorData(initialDoctorData);
-            localStorage.setItem(DOCTOR_DATA_KEY, JSON.stringify(initialDoctorData));
-          }
-        } else if (parsedUser.type === 'patient') {
-          const storedPatientData = localStorage.getItem(PATIENT_DATA_KEY);
-          if (storedPatientData) {
-            const parsedPatientData = JSON.parse(storedPatientData);
-            // Convert date strings back to Date objects in appointments
-            if (parsedPatientData.appointments) {
-              parsedPatientData.appointments = parsedPatientData.appointments.map((apt: any) => ({
-                ...apt,
-                date: new Date(apt.date)
-              }));
-            }
-            // Convert date strings in medical records if any
-            if (parsedPatientData.medicalRecords) {
-              parsedPatientData.medicalRecords = parsedPatientData.medicalRecords.map((rec: any) => ({
-                ...rec,
-                uploadDate: new Date(rec.uploadDate)
-              }));
-            }
-            setPatientData(parsedPatientData);
-          } else {
-            // Initialize patient data
-            const initialPatientData: PatientData = {
-              medicalHistory: '',
-              appointments: [],
-              medicalRecords: []
-            };
-            setPatientData(initialPatientData);
-            localStorage.setItem(PATIENT_DATA_KEY, JSON.stringify(initialPatientData));
-          }
+          }, 0);
+        } else {
+          // Clear auth state if session is null
+          setUser(null);
+          setIsAuthenticated(false);
+          setUserType(null);
+          setDoctorData(null);
+          setPatientData(null);
         }
-      } catch (error) {
-        // If there's an error parsing the stored user data, clear it
-        console.error("Error parsing stored user data:", error);
-        localStorage.removeItem(AUTH_STORAGE_KEY);
       }
-    }
+    );
+
+    // Then get current session
+    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      setSession(currentSession);
+      
+      if (currentSession?.user) {
+        setIsAuthenticated(true);
+        
+        // Fetch user profile
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentSession.user.id)
+          .single()
+          .then(({ data: profileData, error }) => {
+            if (error) {
+              console.error('Error fetching profile on init:', error);
+              return;
+            }
+            
+            if (profileData) {
+              const userData: User = {
+                id: profileData.id,
+                email: profileData.email,
+                name: profileData.name || '',
+                type: profileData.type as 'patient' | 'doctor',
+                profileImage: profileData.profile_image,
+                phone: profileData.phone,
+                age: profileData.age,
+                address: profileData.address,
+                bio: profileData.bio,
+                specialization: profileData.specialization,
+                medicalHistory: profileData.medical_history
+              };
+              
+              setUser(userData);
+              setUserType(profileData.type);
+              
+              // Load additional data based on user type
+              if (profileData.type === 'doctor') {
+                loadDoctorData(userData.id);
+              } else if (profileData.type === 'patient') {
+                loadPatientData(userData.id);
+              }
+            }
+          });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = (userData: User, additionalData?: any) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-    setUserType(userData.type);
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
-    
-    if (userData.type === 'doctor') {
-      const doctorDataToStore: DoctorData = additionalData || {
-        specialization: userData.specialization || '',
-        patients: [],
-        appointments: [],
-        patientRequests: []
-      };
-      setDoctorData(doctorDataToStore);
-      localStorage.setItem(DOCTOR_DATA_KEY, JSON.stringify(doctorDataToStore));
-    } else if (userData.type === 'patient') {
-      const patientDataToStore: PatientData = additionalData || {
-        medicalHistory: '',
-        appointments: [],
-        medicalRecords: []
-      };
-      setPatientData(patientDataToStore);
-      localStorage.setItem(PATIENT_DATA_KEY, JSON.stringify(patientDataToStore));
+  const loadDoctorData = async (userId: string) => {
+    try {
+      // For now, we'll use local storage for doctor data until we implement it fully in the database
+      const storedDoctorData = localStorage.getItem(DOCTOR_DATA_KEY);
+      if (storedDoctorData) {
+        const parsedDoctorData = JSON.parse(storedDoctorData);
+        // Convert date strings back to Date objects in appointments
+        if (parsedDoctorData.appointments) {
+          parsedDoctorData.appointments = parsedDoctorData.appointments.map((apt: any) => ({
+            ...apt,
+            date: new Date(apt.date)
+          }));
+        }
+        // Convert date strings in patient requests
+        if (parsedDoctorData.patientRequests) {
+          parsedDoctorData.patientRequests = parsedDoctorData.patientRequests.map((req: any) => ({
+            ...req,
+            date: new Date(req.date)
+          }));
+        }
+        setDoctorData(parsedDoctorData);
+      } else {
+        // Initialize doctor data
+        const { data: doctorData, error } = await supabase
+          .from('doctor_data')
+          .select('*')
+          .eq('id', userId)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching doctor data:', error);
+          return;
+        }
+        
+        // Fetch appointments for the doctor
+        const { data: appointments, error: appError } = await supabase
+          .from('appointments')
+          .select('*')
+          .eq('doctor_id', userId);
+          
+        if (appError) {
+          console.error('Error fetching appointments:', appError);
+        }
+        
+        // Fetch patient requests for the doctor
+        const { data: requests, error: reqError } = await supabase
+          .from('patient_requests')
+          .select('*')
+          .eq('doctor_id', userId);
+          
+        if (reqError) {
+          console.error('Error fetching patient requests:', reqError);
+        }
+        
+        const initialDoctorData: DoctorData = {
+          specialization: doctorData?.specialization || '',
+          patients: doctorData?.patients || [],
+          appointments: appointments ? appointments.map((apt) => ({
+            id: apt.id,
+            doctorId: apt.doctor_id,
+            patientId: apt.patient_id,
+            doctorName: apt.doctor_name,
+            patientName: apt.patient_name,
+            date: new Date(apt.date),
+            status: apt.status as 'scheduled' | 'completed' | 'cancelled',
+            notes: apt.notes
+          })) : [],
+          patientRequests: requests ? requests.map((req) => ({
+            id: req.id,
+            patientId: req.patient_id,
+            patientName: req.patient_name,
+            message: req.message,
+            status: req.status as 'pending' | 'accepted' | 'rejected',
+            date: new Date(req.date),
+            severity: req.severity as 'low' | 'medium' | 'high'
+          })) : []
+        };
+        
+        setDoctorData(initialDoctorData);
+        localStorage.setItem(DOCTOR_DATA_KEY, JSON.stringify(initialDoctorData));
+      }
+    } catch (error) {
+      console.error("Error loading doctor data:", error);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    setUserType(null);
-    setDoctorData(null);
-    setPatientData(null);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.removeItem(DOCTOR_DATA_KEY);
-    localStorage.removeItem(PATIENT_DATA_KEY);
+  const loadPatientData = async (userId: string) => {
+    try {
+      // For now, we'll use local storage for patient data until we implement it fully in the database
+      const storedPatientData = localStorage.getItem(PATIENT_DATA_KEY);
+      if (storedPatientData) {
+        const parsedPatientData = JSON.parse(storedPatientData);
+        // Convert date strings back to Date objects in appointments
+        if (parsedPatientData.appointments) {
+          parsedPatientData.appointments = parsedPatientData.appointments.map((apt: any) => ({
+            ...apt,
+            date: new Date(apt.date)
+          }));
+        }
+        // Convert date strings in medical records if any
+        if (parsedPatientData.medicalRecords) {
+          parsedPatientData.medicalRecords = parsedPatientData.medicalRecords.map((rec: any) => ({
+            ...rec,
+            uploadDate: new Date(rec.uploadDate)
+          }));
+        }
+        setPatientData(parsedPatientData);
+      } else {
+        // Initialize patient data from database
+        const { data: patientData, error } = await supabase
+          .from('patient_data')
+          .select('*')
+          .eq('id', userId)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching patient data:', error);
+          return;
+        }
+        
+        // Fetch appointments for the patient
+        const { data: appointments, error: appError } = await supabase
+          .from('appointments')
+          .select('*')
+          .eq('patient_id', userId);
+          
+        if (appError) {
+          console.error('Error fetching appointments:', appError);
+        }
+        
+        // Fetch medical records for the patient
+        const { data: records, error: recError } = await supabase
+          .from('medical_records')
+          .select('*')
+          .eq('patient_id', userId);
+          
+        if (recError) {
+          console.error('Error fetching medical records:', recError);
+        }
+        
+        const initialPatientData: PatientData = {
+          medicalHistory: patientData?.medical_history || '',
+          appointments: appointments ? appointments.map((apt) => ({
+            id: apt.id,
+            doctorId: apt.doctor_id,
+            patientId: apt.patient_id,
+            doctorName: apt.doctor_name,
+            patientName: apt.patient_name,
+            date: new Date(apt.date),
+            status: apt.status as 'scheduled' | 'completed' | 'cancelled',
+            notes: apt.notes
+          })) : [],
+          doctor: patientData?.doctor_id,
+          medicalRecords: records ? records.map((rec) => ({
+            id: rec.id,
+            name: rec.name,
+            type: rec.type as 'pdf' | 'image' | 'text',
+            uploadDate: new Date(rec.upload_date),
+            url: rec.url
+          })) : []
+        };
+        
+        setPatientData(initialPatientData);
+        localStorage.setItem(PATIENT_DATA_KEY, JSON.stringify(initialPatientData));
+      }
+    } catch (error) {
+      console.error("Error loading patient data:", error);
+    }
   };
 
-  const updateUserProfile = (data: Partial<User>) => {
+  const signup = async (userData: any, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: userData.email,
+        password: password,
+        options: {
+          data: {
+            name: `${userData.firstName} ${userData.lastName}`,
+            type: userData.type || 'patient',
+            specialization: userData.specialization,
+            licenseNumber: userData.licenseNumber
+          }
+        }
+      });
+      
+      return { data, error };
+    } catch (error) {
+      console.error('Signup error:', error);
+      return { data: null, error };
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      return { data, error };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { data: null, error };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setIsAuthenticated(false);
+      setUserType(null);
+      setDoctorData(null);
+      setPatientData(null);
+      localStorage.removeItem(DOCTOR_DATA_KEY);
+      localStorage.removeItem(PATIENT_DATA_KEY);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const updateUserProfile = async (data: Partial<User>) => {
     if (user) {
-      const updatedUser = { ...user, ...data };
-      setUser(updatedUser);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
+      try {
+        // Update the local user state
+        const updatedUser = { ...user, ...data };
+        setUser(updatedUser);
+        
+        // Convert to database format (snake_case)
+        const dbData: any = {};
+        if (data.name !== undefined) dbData.name = data.name;
+        if (data.profileImage !== undefined) dbData.profile_image = data.profileImage;
+        if (data.phone !== undefined) dbData.phone = data.phone;
+        if (data.age !== undefined) dbData.age = data.age;
+        if (data.address !== undefined) dbData.address = data.address;
+        if (data.bio !== undefined) dbData.bio = data.bio;
+        if (data.specialization !== undefined) dbData.specialization = data.specialization;
+        if (data.medicalHistory !== undefined) dbData.medical_history = data.medicalHistory;
+        
+        // Update in database
+        const { error } = await supabase
+          .from('profiles')
+          .update(dbData)
+          .eq('id', user.id);
+          
+        if (error) {
+          console.error('Error updating profile:', error);
+          throw error;
+        }
+      } catch (error) {
+        console.error('Error in updateUserProfile:', error);
+        throw error;
+      }
     }
   };
 
@@ -297,6 +530,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       doctorData,
       patientData,
       login, 
+      signup,
       logout,
       updateUserProfile,
       addAppointment,

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,10 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import MainLayout from "@/components/layout/MainLayout";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signup } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [patientForm, setPatientForm] = useState({
@@ -20,7 +23,8 @@ const Signup = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    agreeTerms: false
+    agreeTerms: false,
+    type: "patient" as const
   });
 
   const [doctorForm, setDoctorForm] = useState({
@@ -31,7 +35,8 @@ const Signup = () => {
     licenseNumber: "",
     password: "",
     confirmPassword: "",
-    agreeTerms: false
+    agreeTerms: false,
+    type: "doctor" as const
   });
 
   const handlePatientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +63,7 @@ const Signup = () => {
     }
   };
 
-  const handlePatientSubmit = (e: React.FormEvent) => {
+  const handlePatientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (patientForm.password !== patientForm.confirmPassword) {
@@ -72,18 +77,28 @@ const Signup = () => {
 
     setIsSubmitting(true);
 
-    // Simulate signup
-    setTimeout(() => {
-      setIsSubmitting(false);
+    const { data, error } = await signup(patientForm, patientForm.password);
+    
+    setIsSubmitting(false);
+    
+    if (error) {
       toast({
-        title: "Account Created",
-        description: "Welcome to Mindful Grove! You can now log in.",
+        title: "Signup Failed",
+        description: error.message || "There was an error creating your account. Please try again.",
+        variant: "destructive",
       });
-      navigate("/login", { state: { userType: "patient" } });
-    }, 1500);
+      return;
+    }
+    
+    toast({
+      title: "Account Created",
+      description: "Welcome to Mindful Grove! You can now log in.",
+    });
+    
+    navigate("/login", { state: { userType: "patient" } });
   };
 
-  const handleDoctorSubmit = (e: React.FormEvent) => {
+  const handleDoctorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (doctorForm.password !== doctorForm.confirmPassword) {
@@ -97,15 +112,25 @@ const Signup = () => {
 
     setIsSubmitting(true);
 
-    // Simulate signup
-    setTimeout(() => {
-      setIsSubmitting(false);
+    const { data, error } = await signup(doctorForm, doctorForm.password);
+    
+    setIsSubmitting(false);
+    
+    if (error) {
       toast({
-        title: "Professional Application Submitted",
-        description: "Thank you for applying. We'll review your credentials and contact you shortly.",
+        title: "Signup Failed",
+        description: error.message || "There was an error submitting your application. Please try again.",
+        variant: "destructive",
       });
-      navigate("/login", { state: { userType: "doctor" } });
-    }, 1500);
+      return;
+    }
+    
+    toast({
+      title: "Professional Application Submitted",
+      description: "Thank you for applying. We'll review your credentials and contact you shortly.",
+    });
+    
+    navigate("/login", { state: { userType: "doctor" } });
   };
 
   return (

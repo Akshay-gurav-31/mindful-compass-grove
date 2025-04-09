@@ -53,58 +53,58 @@ const Login = () => {
     }));
   };
 
-  const handlePatientSubmit = (e: React.FormEvent) => {
+  const handlePatientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate login (in a real app, this would be an API call)
-    setTimeout(() => {
-      setIsSubmitting(false);
-      
-      // Create a mock user for demo purposes
-      const user = {
-        id: "p123",
-        email: patientForm.email,
-        name: patientForm.email.split('@')[0],
-        type: 'patient' as const,
-      };
-      
-      login(user);
-      
+    const { data, error } = await login(patientForm.email, patientForm.password);
+    
+    setIsSubmitting(false);
+    
+    if (error) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (data) {
       toast({
         title: "Login Successful",
         description: "Welcome back to Mindful Grove!",
       });
       
       navigate("/dashboard");
-    }, 1500);
+    }
   };
 
-  const handleDoctorSubmit = (e: React.FormEvent) => {
+  const handleDoctorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate login
-    setTimeout(() => {
-      setIsSubmitting(false);
-      
-      // Create a mock user for demo purposes
-      const user = {
-        id: "d456",
-        email: doctorForm.email,
-        name: "Dr. " + doctorForm.email.split('@')[0],
-        type: 'doctor' as const,
-      };
-      
-      login(user);
-      
+    const { data, error } = await login(doctorForm.email, doctorForm.password);
+    
+    setIsSubmitting(false);
+    
+    if (error) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (data) {
       toast({
         title: "Professional Login Successful",
         description: "Welcome back to the Mindful Grove professional portal!",
       });
       
-      navigate("/dashboard");
-    }, 1500);
+      navigate("/doctor-dashboard");
+    }
   };
 
   return (
