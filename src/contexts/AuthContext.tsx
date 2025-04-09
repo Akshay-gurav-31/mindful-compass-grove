@@ -117,6 +117,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
+        console.log("Auth state changed:", event, newSession?.user?.id);
         setSession(newSession);
         
         if (newSession) {
@@ -180,6 +181,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     // Then get current session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Current session:", currentSession?.user?.id);
       setSession(currentSession);
       
       if (currentSession?.user) {
@@ -403,6 +405,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signup = async (userData: any, password: string) => {
     try {
+      console.log("Signing up with:", userData.email, userData.type);
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
         password: password,
@@ -416,6 +419,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
       });
       
+      if (error) {
+        console.error("Signup error:", error);
+      } else {
+        console.log("Signup successful:", data);
+      }
+      
       return { data, error };
     } catch (error) {
       console.error('Signup error:', error);
@@ -425,12 +434,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Logging in with:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
-      return { data, error };
+      if (error) {
+        console.error("Login error:", error);
+        return { data: null, error };
+      }
+      
+      console.log("Login successful:", data);
+      return { data, error: null };
     } catch (error) {
       console.error('Login error:', error);
       return { data: null, error };
@@ -439,6 +455,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     try {
+      console.log("Logging out...");
       await supabase.auth.signOut();
       setUser(null);
       setIsAuthenticated(false);
@@ -447,6 +464,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setPatientData(null);
       localStorage.removeItem(DOCTOR_DATA_KEY);
       localStorage.removeItem(PATIENT_DATA_KEY);
+      console.log("Logout successful");
     } catch (error) {
       console.error('Logout error:', error);
     }

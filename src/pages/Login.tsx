@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -55,55 +54,109 @@ const Login = () => {
 
   const handlePatientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    const { data, error } = await login(patientForm.email, patientForm.password);
     
-    setIsSubmitting(false);
-    
-    if (error) {
+    if (!patientForm.email || !patientForm.password) {
       toast({
         title: "Login Failed",
-        description: error.message || "Please check your credentials and try again.",
+        description: "Please enter both email and password.",
         variant: "destructive",
       });
       return;
     }
     
-    if (data) {
-      toast({
-        title: "Login Successful",
-        description: "Welcome back to Mindful Grove!",
-      });
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await login(patientForm.email, patientForm.password);
       
-      navigate("/dashboard");
+      setIsSubmitting(false);
+      
+      if (error) {
+        console.error("Login error:", error);
+        toast({
+          title: "Login Failed",
+          description: error.message || "Invalid email or password. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (data?.user) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome back to Mindful Grove!",
+        });
+        
+        navigate("/dashboard");
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid credentials. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      console.error("Unexpected login error:", err);
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDoctorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    const { data, error } = await login(doctorForm.email, doctorForm.password);
     
-    setIsSubmitting(false);
-    
-    if (error) {
+    if (!doctorForm.email || !doctorForm.password) {
       toast({
         title: "Login Failed",
-        description: error.message || "Please check your credentials and try again.",
+        description: "Please enter both email and password.",
         variant: "destructive",
       });
       return;
     }
     
-    if (data) {
-      toast({
-        title: "Professional Login Successful",
-        description: "Welcome back to the Mindful Grove professional portal!",
-      });
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await login(doctorForm.email, doctorForm.password);
       
-      navigate("/doctor-dashboard");
+      setIsSubmitting(false);
+      
+      if (error) {
+        console.error("Login error:", error);
+        toast({
+          title: "Login Failed",
+          description: error.message || "Invalid email or password. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (data?.user) {
+        toast({
+          title: "Professional Login Successful",
+          description: "Welcome back to the Mindful Grove professional portal!",
+        });
+        
+        navigate("/doctor-dashboard");
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Invalid credentials. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      setIsSubmitting(false);
+      console.error("Unexpected login error:", err);
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
