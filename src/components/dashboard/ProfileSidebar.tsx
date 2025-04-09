@@ -6,7 +6,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { User, Calendar, Clock, FileText, Settings, LogOut } from "lucide-react";
 
-const ProfileSidebar = () => {
+interface ProfileSidebarProps {
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
+}
+
+const ProfileSidebar = ({ activeTab = "profile", onTabChange }: ProfileSidebarProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -14,6 +19,15 @@ const ProfileSidebar = () => {
     logout();
     navigate("/");
   };
+
+  const handleTabClick = (tab: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
+
+  const isActive = (tab: string) => activeTab === tab;
 
   return (
     <div className="w-full md:w-64 space-y-4">
@@ -35,23 +49,43 @@ const ProfileSidebar = () => {
       <Card className="dark-card">
         <CardContent className="p-0">
           <nav className="flex flex-col">
-            <a href="#profile" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-mindful-primary">
+            <a 
+              href="#profile" 
+              className={`flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 ${isActive("profile") ? "border-mindful-primary bg-neutral-700/50" : "border-transparent"}`}
+              onClick={handleTabClick("profile")}
+            >
               <User size={18} />
               <span>Profile</span>
             </a>
-            <a href="#appointments" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+            <a 
+              href="#appointments" 
+              className={`flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 ${isActive("appointments") ? "border-mindful-primary bg-neutral-700/50" : "border-transparent"}`}
+              onClick={handleTabClick("appointments")}
+            >
               <Calendar size={18} />
               <span>Appointments</span>
             </a>
-            <a href="#history" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+            <a 
+              href="#history" 
+              className={`flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 ${isActive("history") ? "border-mindful-primary bg-neutral-700/50" : "border-transparent"}`}
+              onClick={handleTabClick("history")}
+            >
               <Clock size={18} />
               <span>History</span>
             </a>
-            <a href="#records" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+            <a 
+              href="#records" 
+              className={`flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 ${isActive("records") ? "border-mindful-primary bg-neutral-700/50" : "border-transparent"}`}
+              onClick={handleTabClick("records")}
+            >
               <FileText size={18} />
               <span>Records</span>
             </a>
-            <a href="#settings" className="flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 border-transparent">
+            <a 
+              href="#settings" 
+              className={`flex items-center gap-2 p-3 hover:bg-neutral-700 border-l-4 ${isActive("settings") ? "border-mindful-primary bg-neutral-700/50" : "border-transparent"}`}
+              onClick={handleTabClick("settings")}
+            >
               <Settings size={18} />
               <span>Settings</span>
             </a>
