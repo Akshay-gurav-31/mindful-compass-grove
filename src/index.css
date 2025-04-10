@@ -7,43 +7,43 @@
 
 @layer base {
   :root {
-    --background: 0 0% 10%;
-    --foreground: 0 0% 95%;
+    --background: 230 30% 10%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
+    --card: 230 30% 15%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 230 30% 15%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 142 64% 38%;
+    --primary: 225 73% 57%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 110 27% 56%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 270 67% 60%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 230 30% 20%;
+    --muted-foreground: 210 40% 75%;
 
-    --accent: 108 40% 84%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 246 70% 90%;
+    --accent-foreground: 230 30% 10%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 142 64% 38%;
+    --border: 230 30% 20%;
+    --input: 230 30% 20%;
+    --ring: 225 73% 57%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 15%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 142 64% 38%;
+    --sidebar-background: 230 30% 18%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 225 73% 57%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 108 40% 84%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 20%;
+    --sidebar-accent: 246 70% 90%;
+    --sidebar-accent-foreground: 230 30% 10%;
+    --sidebar-border: 230 30% 25%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -58,7 +58,7 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
-  .mindful-container {
+  .elysium-container {
     @apply container px-4 mx-auto;
   }
 }
@@ -80,23 +80,27 @@
     @apply py-12 md:py-20;
   }
   
-  .mindful-btn-primary {
-    @apply bg-mindful-primary hover:bg-mindful-secondary text-white font-medium py-2 px-6 rounded-md transition-colors duration-300;
+  .elysium-btn-primary {
+    @apply bg-primary hover:bg-secondary text-white font-medium py-2 px-6 rounded-md transition-colors duration-300;
   }
   
-  .mindful-btn-secondary {
-    @apply bg-mindful-accent hover:bg-mindful-blue text-mindful-darkText font-medium py-2 px-6 rounded-md transition-colors duration-300;
+  .elysium-btn-secondary {
+    @apply bg-accent hover:bg-blue-400 text-accent-foreground font-medium py-2 px-6 rounded-md transition-colors duration-300;
   }
   
-  .mindful-btn-outline {
-    @apply border-2 border-mindful-primary hover:bg-opacity-20 hover:bg-mindful-primary text-mindful-primary font-medium py-2 px-6 rounded-md transition-colors duration-300;
+  .elysium-btn-outline {
+    @apply border-2 border-primary hover:bg-opacity-20 hover:bg-primary text-primary font-medium py-2 px-6 rounded-md transition-colors duration-300;
   }
   
   .dark-card {
-    @apply bg-neutral-800 border-neutral-700 text-white shadow-lg;
+    @apply bg-card border-muted text-card-foreground shadow-lg;
   }
   
   .dark-input {
-    @apply bg-neutral-700 border-neutral-600 text-white placeholder:text-gray-400;
+    @apply bg-muted border-muted-foreground text-foreground placeholder:text-muted-foreground;
+  }
+  
+  .gradient-bg {
+    @apply bg-gradient-to-br from-primary/20 via-background to-secondary/20;
   }
 }

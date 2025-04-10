@@ -63,15 +63,16 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom colors for Mindful Grove
-				mindful: {
-					primary: '#4F7942', // Forest green
-					secondary: '#78A678', // Sage green
-					accent: '#D4E7C5', // Light mint
-					highlight: '#E8F3D6', // Pale green
-					blue: '#A5C1D5', // Calming blue
-					warmNeutral: '#F5F1E8', // Warm cream
-					darkText: '#2D3A3A', // Dark teal-gray
+				// Custom colors for Elysium AI
+				elysium: {
+					blue: '#4A85F8', // Light blue
+					purple: '#9470F5', // Purple
+					lightPurple: '#C7B9FF', // Light purple
+					highlight: '#E5E1FF', // Pale purple-blue
+					darkBlue: '#1E293B', // Dark blue
+					darkPurple: '#2B2040', // Dark purple
+					gray: '#F8FAFC', // Light gray
+					darkText: '#1E293B', // Dark text
 				}
 			},
 			borderRadius: {
