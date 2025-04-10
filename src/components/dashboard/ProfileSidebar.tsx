@@ -36,8 +36,8 @@ const ProfileSidebar = ({ activeTab = "profile", onTabChange }: ProfileSidebarPr
         <CardContent className="p-4">
           <div className="flex flex-col items-center text-center">
             <Avatar className="w-24 h-24 mb-4">
-              {user?.profile_image ? (
-                <AvatarImage src={user.profile_image} alt={user?.name || "User"} />
+              {user?.profileImage ? (
+                <AvatarImage src={user.profileImage} alt={user?.name || "User"} />
               ) : (
                 <AvatarFallback className="bg-mindful-primary text-white text-3xl">
                   {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
