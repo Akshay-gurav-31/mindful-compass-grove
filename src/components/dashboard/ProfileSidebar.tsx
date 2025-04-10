@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { User, Calendar, Clock, FileText, Settings, LogOut } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface ProfileSidebarProps {
   activeTab?: string;
@@ -34,9 +35,15 @@ const ProfileSidebar = ({ activeTab = "profile", onTabChange }: ProfileSidebarPr
       <Card className="dark-card">
         <CardContent className="p-4">
           <div className="flex flex-col items-center text-center">
-            <div className="w-24 h-24 rounded-full bg-neutral-700 flex items-center justify-center text-3xl text-mindful-primary mb-4">
-              {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
-            </div>
+            <Avatar className="w-24 h-24 mb-4">
+              {user?.profile_image ? (
+                <AvatarImage src={user.profile_image} alt={user?.name || "User"} />
+              ) : (
+                <AvatarFallback className="bg-mindful-primary text-white text-3xl">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : "U"}
+                </AvatarFallback>
+              )}
+            </Avatar>
             <h3 className="text-lg font-semibold">{user?.name || "User"}</h3>
             <p className="text-sm text-gray-400">{user?.email}</p>
             <p className="text-xs bg-mindful-primary text-white px-2 py-1 rounded mt-2 capitalize">
