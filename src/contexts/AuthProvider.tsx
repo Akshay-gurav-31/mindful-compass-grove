@@ -55,6 +55,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
       } catch (error) {
         console.error("Error parsing stored user:", error);
+        // Clear corrupted data
+        localStorage.removeItem('elysiumAIUser');
       }
     }
   }, []);
