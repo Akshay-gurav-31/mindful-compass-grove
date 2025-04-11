@@ -1,47 +1,13 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-import { Database } from '@/integrations/supabase/types';
+import { 
+  User, 
+  authenticateUser, 
+  createUser, 
+  updateUserProfile as updateUserDb
+} from '@/database';
 
-// Define types for database tables
-type ProfileRow = Database['public']['Tables']['profiles']['Row'];
-type DoctorDataRow = Database['public']['Tables']['doctor_data']['Row'];
-type PatientDataRow = Database['public']['Tables']['patient_data']['Row'];
-type AppointmentRow = Database['public']['Tables']['appointments']['Row'];
-type PatientRequestRow = Database['public']['Tables']['patient_requests']['Row'];
-type MedicalRecordRow = Database['public']['Tables']['medical_records']['Row'];
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  type: 'patient' | 'doctor';
-  profileImage?: string;
-  phone?: string;
-  age?: string;
-  address?: string;
-  bio?: string;
-  specialization?: string; // For doctors
-  medicalHistory?: string; // For patients
-}
-
-// Doctor specific interface
-interface DoctorData {
-  specialization: string;
-  patients: string[]; // IDs of patients
-  appointments: Appointment[];
-  patientRequests: PatientRequest[];
-}
-
-// Patient specific interface
-interface PatientData {
-  medicalHistory?: string;
-  appointments: Appointment[];
-  doctor?: string; // ID of assigned doctor
-  medicalRecords?: MedicalRecord[];
-}
-
-// Appointment interface
+// Types
 interface Appointment {
   id: string;
   doctorId: string;
@@ -53,7 +19,6 @@ interface Appointment {
   notes?: string;
 }
 
-// Patient request interface
 interface PatientRequest {
   id: string;
   patientName: string;
@@ -64,13 +29,26 @@ interface PatientRequest {
   severity: 'low' | 'medium' | 'high';
 }
 
-// Medical record interface
 interface MedicalRecord {
   id: string;
   name: string;
   type: 'pdf' | 'image' | 'text';
   uploadDate: Date;
   url: string;
+}
+
+interface DoctorData {
+  specialization: string;
+  patients: string[]; // IDs of patients
+  appointments: Appointment[];
+  patientRequests: PatientRequest[];
+}
+
+interface PatientData {
+  medicalHistory?: string;
+  appointments: Appointment[];
+  doctor?: string; // ID of assigned doctor
+  medicalRecords?: MedicalRecord[];
 }
 
 interface AuthContextType {
@@ -101,140 +79,41 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const DOCTOR_DATA_KEY = 'mindfulGroveDoctor';
-const PATIENT_DATA_KEY = 'mindfulGrovePatient';
+const DOCTOR_DATA_KEY = 'elysiumAIDoctor';
+const PATIENT_DATA_KEY = 'elysiumAIPatient';
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userType, setUserType] = useState<'patient' | 'doctor' | null>(null);
   const [doctorData, setDoctorData] = useState<DoctorData | null>(null);
   const [patientData, setPatientData] = useState<PatientData | null>(null);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        console.log("Auth state changed:", event, newSession?.user?.id);
-        setSession(newSession);
-        
-        if (newSession) {
-          setIsAuthenticated(true);
-          
-          // Fetch user profile data
-          setTimeout(async () => {
-            if (newSession.user?.id) {
-              try {
-                const { data: profileData, error } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', newSession.user.id)
-                  .single();
-                
-                if (error) {
-                  console.error('Error fetching profile:', error);
-                  return;
-                }
-                
-                if (profileData) {
-                  const userData: User = {
-                    id: profileData.id,
-                    email: profileData.email,
-                    name: profileData.name || '',
-                    type: profileData.type as 'patient' | 'doctor',
-                    profileImage: profileData.profile_image,
-                    phone: profileData.phone,
-                    age: profileData.age,
-                    address: profileData.address,
-                    bio: profileData.bio,
-                    specialization: profileData.specialization,
-                    medicalHistory: profileData.medical_history
-                  };
-                  
-                  setUser(userData);
-                  setUserType(profileData.type as 'patient' | 'doctor');
-                  
-                  // Load additional data based on user type
-                  if (profileData.type === 'doctor') {
-                    loadDoctorData(userData.id);
-                  } else if (profileData.type === 'patient') {
-                    loadPatientData(userData.id);
-                  }
-                }
-              } catch (error) {
-                console.error('Error in auth state change:', error);
-              }
-            }
-          }, 0);
-        } else {
-          // Clear auth state if session is null
-          setUser(null);
-          setIsAuthenticated(false);
-          setUserType(null);
-          setDoctorData(null);
-          setPatientData(null);
-        }
-      }
-    );
-
-    // Then get current session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log("Current session:", currentSession?.user?.id);
-      setSession(currentSession);
-      
-      if (currentSession?.user) {
+    // Check if user is stored in localStorage
+    const storedUser = localStorage.getItem('elysiumAIUser');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
         setIsAuthenticated(true);
+        setUserType(parsedUser.type);
         
-        // Fetch user profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentSession.user.id)
-          .single()
-          .then(({ data: profileData, error }) => {
-            if (error) {
-              console.error('Error fetching profile on init:', error);
-              return;
-            }
-            
-            if (profileData) {
-              const userData: User = {
-                id: profileData.id,
-                email: profileData.email,
-                name: profileData.name || '',
-                type: profileData.type as 'patient' | 'doctor',
-                profileImage: profileData.profile_image,
-                phone: profileData.phone,
-                age: profileData.age,
-                address: profileData.address,
-                bio: profileData.bio,
-                specialization: profileData.specialization,
-                medicalHistory: profileData.medical_history
-              };
-              
-              setUser(userData);
-              setUserType(profileData.type as 'patient' | 'doctor');
-              
-              // Load additional data based on user type
-              if (profileData.type === 'doctor') {
-                loadDoctorData(userData.id);
-              } else if (profileData.type === 'patient') {
-                loadPatientData(userData.id);
-              }
-            }
-          });
+        // Load additional data based on user type
+        if (parsedUser.type === 'doctor') {
+          loadDoctorData(parsedUser.id);
+        } else if (parsedUser.type === 'patient') {
+          loadPatientData(parsedUser.id);
+        }
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
       }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    }
   }, []);
 
   const loadDoctorData = async (userId: string) => {
     try {
-      // For now, we'll use local storage for doctor data until we implement it fully in the database
+      // Get doctor data from localStorage
       const storedDoctorData = localStorage.getItem(DOCTOR_DATA_KEY);
       if (storedDoctorData) {
         const parsedDoctorData = JSON.parse(storedDoctorData);
@@ -255,59 +134,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setDoctorData(parsedDoctorData);
       } else {
         // Initialize doctor data
-        const { data: doctorData, error } = await supabase
-          .from('doctor_data')
-          .select('*')
-          .eq('id', userId)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching doctor data:', error);
-          return;
-        }
-        
-        // Fetch appointments for the doctor
-        const { data: appointments, error: appError } = await supabase
-          .from('appointments')
-          .select('*')
-          .eq('doctor_id', userId);
-          
-        if (appError) {
-          console.error('Error fetching appointments:', appError);
-        }
-        
-        // Fetch patient requests for the doctor
-        const { data: requests, error: reqError } = await supabase
-          .from('patient_requests')
-          .select('*')
-          .eq('doctor_id', userId);
-          
-        if (reqError) {
-          console.error('Error fetching patient requests:', reqError);
-        }
-        
         const initialDoctorData: DoctorData = {
-          specialization: doctorData?.specialization || '',
-          patients: doctorData?.patients || [],
-          appointments: appointments ? appointments.map((apt) => ({
-            id: apt.id,
-            doctorId: apt.doctor_id,
-            patientId: apt.patient_id,
-            doctorName: apt.doctor_name,
-            patientName: apt.patient_name,
-            date: new Date(apt.date),
-            status: apt.status as 'scheduled' | 'completed' | 'cancelled',
-            notes: apt.notes
-          })) : [],
-          patientRequests: requests ? requests.map((req) => ({
-            id: req.id,
-            patientId: req.patient_id,
-            patientName: req.patient_name,
-            message: req.message,
-            status: req.status as 'pending' | 'accepted' | 'rejected',
-            date: new Date(req.date),
-            severity: req.severity as 'low' | 'medium' | 'high'
-          })) : []
+          specialization: user?.specialization || '',
+          patients: [],
+          appointments: [],
+          patientRequests: []
         };
         
         setDoctorData(initialDoctorData);
@@ -320,7 +151,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const loadPatientData = async (userId: string) => {
     try {
-      // For now, we'll use local storage for patient data until we implement it fully in the database
+      // Get patient data from localStorage
       const storedPatientData = localStorage.getItem(PATIENT_DATA_KEY);
       if (storedPatientData) {
         const parsedPatientData = JSON.parse(storedPatientData);
@@ -340,58 +171,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
         setPatientData(parsedPatientData);
       } else {
-        // Initialize patient data from database
-        const { data: patientData, error } = await supabase
-          .from('patient_data')
-          .select('*')
-          .eq('id', userId)
-          .single();
-          
-        if (error) {
-          console.error('Error fetching patient data:', error);
-          return;
-        }
-        
-        // Fetch appointments for the patient
-        const { data: appointments, error: appError } = await supabase
-          .from('appointments')
-          .select('*')
-          .eq('patient_id', userId);
-          
-        if (appError) {
-          console.error('Error fetching appointments:', appError);
-        }
-        
-        // Fetch medical records for the patient
-        const { data: records, error: recError } = await supabase
-          .from('medical_records')
-          .select('*')
-          .eq('patient_id', userId);
-          
-        if (recError) {
-          console.error('Error fetching medical records:', recError);
-        }
-        
+        // Initialize patient data
         const initialPatientData: PatientData = {
-          medicalHistory: patientData?.medical_history || '',
-          appointments: appointments ? appointments.map((apt) => ({
-            id: apt.id,
-            doctorId: apt.doctor_id,
-            patientId: apt.patient_id,
-            doctorName: apt.doctor_name,
-            patientName: apt.patient_name,
-            date: new Date(apt.date),
-            status: apt.status as 'scheduled' | 'completed' | 'cancelled',
-            notes: apt.notes
-          })) : [],
-          doctor: patientData?.doctor_id,
-          medicalRecords: records ? records.map((rec) => ({
-            id: rec.id,
-            name: rec.name,
-            type: rec.type as 'pdf' | 'image' | 'text',
-            uploadDate: new Date(rec.upload_date),
-            url: rec.url
-          })) : []
+          medicalHistory: user?.medicalHistory || '',
+          appointments: [],
+          medicalRecords: []
         };
         
         setPatientData(initialPatientData);
@@ -405,71 +189,82 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signup = async (userData: any, password: string) => {
     try {
       console.log("Signing up with:", userData.email, userData.type);
-      const { data, error } = await supabase.auth.signUp({
+      
+      // Format the user data
+      const formattedUserData = {
         email: userData.email,
         password: password,
-        options: {
-          data: {
-            name: `${userData.firstName} ${userData.lastName}`,
-            type: userData.type || 'patient',
-            specialization: userData.specialization,
-            licenseNumber: userData.licenseNumber
-          }
-        }
-      });
+        name: `${userData.firstName} ${userData.lastName}`,
+        type: userData.type || 'patient',
+        specialization: userData.specialization,
+        licenseNumber: userData.licenseNumber
+      };
       
-      if (error) {
-        console.error("Signup error:", error);
-      } else {
-        console.log("Signup successful:", data);
+      // Check if user already exists
+      const existingUser = await findUserByEmail(userData.email);
+      if (existingUser.data) {
+        return { 
+          data: null, 
+          error: { message: "User with this email already exists" } 
+        };
       }
       
-      return { data, error };
+      // Create the user
+      const result = createUser(formattedUserData);
+      
+      if (result.error) {
+        console.error("Signup error:", result.error);
+      } else {
+        console.log("Signup successful:", result.data);
+      }
+      
+      return result;
     } catch (error) {
       console.error('Signup error:', error);
       return { data: null, error };
     }
   };
 
+  const findUserByEmail = async (email: string) => {
+    // In a real implementation, this would search the file
+    // For now, we can check our in-memory users array
+    const users = JSON.parse(localStorage.getItem('elysiumAIUsers') || '[]');
+    const user = users.find((u: User) => u.email === email);
+    return { data: user || null, error: null };
+  };
+
   const login = async (email: string, password: string) => {
     try {
       console.log("Logging in with:", email);
       
-      // First try standard login
-      let { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // Authenticate user
+      const result = authenticateUser(email, password);
       
-      // If error is about email not confirmed, we'll handle it specially
-      if (error && error.message.includes("Email not confirmed")) {
-        console.log("Email not confirmed, attempting alternative login...");
+      if (result.error) {
+        console.error("Login error:", result.error);
+        return { data: null, error: result.error };
+      }
+      
+      if (result.data?.user) {
+        // Set authentication state
+        setUser(result.data.user);
+        setIsAuthenticated(true);
+        setUserType(result.data.user.type);
         
-        // Instead of using admin.getUserByEmail which doesn't exist, 
-        // we'll just try an alternative login approach that doesn't require email confirmation
+        // Store user in localStorage
+        localStorage.setItem('elysiumAIUser', JSON.stringify(result.data.user));
         
-        // Try to sign in again with the implicit flow configured in the client
-        const signInResult = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (signInResult.error) {
-          console.error("Alternative login failed:", signInResult.error);
-          return { data: null, error: signInResult.error };
+        // Load additional data based on user type
+        if (result.data.user.type === 'doctor') {
+          loadDoctorData(result.data.user.id);
+        } else if (result.data.user.type === 'patient') {
+          loadPatientData(result.data.user.id);
         }
         
-        console.log("Login successful:", signInResult.data);
-        return { data: signInResult.data, error: null };
+        console.log("Login successful:", result.data);
       }
       
-      if (error) {
-        console.error("Login error:", error);
-        return { data: null, error };
-      }
-      
-      console.log("Login successful:", data);
-      return { data, error: null };
+      return result;
     } catch (error) {
       console.error('Login error:', error);
       return { data: null, error };
@@ -479,12 +274,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       console.log("Logging out...");
-      await supabase.auth.signOut();
       setUser(null);
       setIsAuthenticated(false);
       setUserType(null);
       setDoctorData(null);
       setPatientData(null);
+      localStorage.removeItem('elysiumAIUser');
       localStorage.removeItem(DOCTOR_DATA_KEY);
       localStorage.removeItem(PATIENT_DATA_KEY);
       console.log("Logout successful");
@@ -500,27 +295,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const updatedUser = { ...user, ...data };
         setUser(updatedUser);
         
-        // Convert to database format (snake_case)
-        const dbData: any = {};
-        if (data.name !== undefined) dbData.name = data.name;
-        if (data.profileImage !== undefined) dbData.profile_image = data.profileImage;
-        if (data.phone !== undefined) dbData.phone = data.phone;
-        if (data.age !== undefined) dbData.age = data.age;
-        if (data.address !== undefined) dbData.address = data.address;
-        if (data.bio !== undefined) dbData.bio = data.bio;
-        if (data.specialization !== undefined) dbData.specialization = data.specialization;
-        if (data.medicalHistory !== undefined) dbData.medical_history = data.medicalHistory;
-        
         // Update in database
-        const { error } = await supabase
-          .from('profiles')
-          .update(dbData)
-          .eq('id', user.id);
-          
-        if (error) {
-          console.error('Error updating profile:', error);
-          throw error;
+        const result = updateUserDb(user.id, data);
+        
+        if (result.error) {
+          console.error('Error updating profile:', result.error);
+          throw result.error;
         }
+        
+        // Update in localStorage
+        localStorage.setItem('elysiumAIUser', JSON.stringify(updatedUser));
       } catch (error) {
         console.error('Error in updateUserProfile:', error);
         throw error;
