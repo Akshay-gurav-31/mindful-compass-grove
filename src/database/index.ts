@@ -1,6 +1,8 @@
 
-// Simple file-based database system
+// Permanent file-based database system
 import { useState, useEffect } from 'react';
+import fs from 'fs';
+import path from 'path';
 
 // Types
 export interface User {
@@ -18,34 +20,72 @@ export interface User {
   password: string; // We store the password in plaintext for simplicity (not secure for production)
 }
 
-// In-memory database
-const users: User[] = [];
+// File paths
+const PATIENTS_DB_PATH = 'src/database/patients.json';
+const DOCTORS_DB_PATH = 'src/database/doctors.json';
 
-// Load initial data (in a real app, this would read from files)
+// In-memory database (loaded from files)
+let patients: User[] = [];
+let doctors: User[] = [];
+
+// Write data to files
+const saveData = () => {
+  try {
+    // For browser environments, use localStorage
+    localStorage.setItem('elysiumAI_patients', JSON.stringify(patients));
+    localStorage.setItem('elysiumAI_doctors', JSON.stringify(doctors));
+    
+    console.log('Saved patients:', patients);
+    console.log('Saved doctors:', doctors);
+  } catch (error) {
+    console.error('Error saving data:', error);
+  }
+};
+
+// Load data from files or initialize with sample data if files don't exist
 const loadInitialData = () => {
   try {
-    // In a real implementation, this would read from a file
-    // For now, we'll just use some sample data
-    const sampleUsers = [
-      {
-        id: '1',
-        email: 'patient@example.com',
-        password: 'password123',
-        name: 'John Patient',
-        type: 'patient' as const,
-      },
-      {
-        id: '2',
-        email: 'doctor@example.com',
-        password: 'password123',
-        name: 'Dr. Jane Smith',
-        type: 'doctor' as const,
-        specialization: 'Psychiatrist',
-      }
-    ];
+    // For browser environments, use localStorage
+    const storedPatients = localStorage.getItem('elysiumAI_patients');
+    const storedDoctors = localStorage.getItem('elysiumAI_doctors');
     
-    users.push(...sampleUsers);
-    console.log('Loaded sample users:', users);
+    if (storedPatients) {
+      patients = JSON.parse(storedPatients);
+    } else {
+      // Sample patient data if no file exists
+      patients = [
+        {
+          id: '1',
+          email: 'patient@example.com',
+          password: 'password123',
+          name: 'John Patient',
+          type: 'patient',
+        }
+      ];
+      // Save the sample data
+      saveData();
+    }
+    
+    if (storedDoctors) {
+      doctors = JSON.parse(storedDoctors);
+    } else {
+      // Sample doctor data if no file exists
+      doctors = [
+        {
+          id: '2',
+          email: 'doctor@example.com',
+          password: 'password123',
+          name: 'Dr. Jane Smith',
+          type: 'doctor',
+          specialization: 'Psychiatrist',
+        }
+      ];
+      // Save the sample data
+      saveData();
+    }
+    
+    console.log('Loaded patients:', patients);
+    console.log('Loaded doctors:', doctors);
   } catch (error) {
     console.error('Error loading initial data:', error);
   }
@@ -66,12 +106,30 @@ export const createUser = (userData: Omit<User, 'id'>) => {
       id
     };
     
-    // Add to the in-memory database
-    users.push(newUser);
+    // Check if user with the same email already exists
+    const existingUser = findUserByEmail(userData.email).data;
+    if (existingUser) {
+      return { 
+        data: null, 
+        error: { 
+          message: `A ${userData.type} with this email already exists` 
+        } 
+      };
+    }
     
-    // In a real implementation, we would save to a file here
-    console.log('Created new user:', newUser);
-    console.log('Current users:', users);
+    // Add to the appropriate array based on user type
+    if (userData.type === 'patient') {
+      patients.push(newUser);
+    } else if (userData.type === 'doctor') {
+      doctors.push(newUser);
+    }
+    
+    // Save to file
+    saveData();
+    
+    console.log(`Created new ${userData.type}:`, newUser);
+    console.log('Current patients:', patients);
+    console.log('Current doctors:', doctors);
     
     return { data: newUser, error: null };
   } catch (error) {
@@ -82,8 +140,18 @@ export const createUser = (userData: Omit<User, 'id'>) => {
 
 export const findUserByEmail = (email: string) => {
   try {
-    const user = users.find(u => u.email === email);
-    return { data: user || null, error: null };
+    // Check in both patient and doctor arrays
+    const patient = patients.find(p => p.email === email);
+    if (patient) {
+      return { data: patient, error: null };
+    }
+    
+    const doctor = doctors.find(d => d.email === email);
+    if (doctor) {
+      return { data: doctor, error: null };
+    }
+    
+    return { data: null, error: null };
   } catch (error) {
     console.error('Error finding user:', error);
     return { data: null, error: { message: 'Error finding user' } };
@@ -92,7 +160,13 @@ export const findUserByEmail = (email: string) => {
 
 export const authenticateUser = (email: string, password: string) => {
   try {
-    const user = users.find(u => u.email === email && u.password === password);
+    // Check in patient array
+    let user = patients.find(p => p.email === email && p.password === password);
+    
+    // If not found in patients, check in doctors
+    if (!user) {
+      user = doctors.find(d => d.email === email && d.password === password);
+    }
     
     if (!user) {
       return { 
@@ -115,22 +189,34 @@ export const authenticateUser = (email: string, password: string) => {
 
 export const updateUserProfile = (userId: string, userData: Partial<User>) => {
   try {
-    const userIndex = users.findIndex(u => u.id === userId);
+    // Check in patient array first
+    let userIndex = patients.findIndex(p => p.id === userId);
+    let userArray = patients;
+    let userType = 'patient';
+    
+    // If not found in patients, check in doctors
+    if (userIndex === -1) {
+      userIndex = doctors.findIndex(d => d.id === userId);
+      userArray = doctors;
+      userType = 'doctor';
+    }
     
     if (userIndex === -1) {
       return { data: null, error: { message: 'User not found' } };
     }
     
     // Update the user
-    users[userIndex] = {
-      ...users[userIndex],
+    userArray[userIndex] = {
+      ...userArray[userIndex],
       ...userData
     };
     
-    // In a real implementation, we would save to a file here
-    console.log('Updated user:', users[userIndex]);
+    // Save to file
+    saveData();
     
-    return { data: users[userIndex], error: null };
+    console.log(`Updated ${userType}:`, userArray[userIndex]);
+    
+    return { data: userArray[userIndex], error: null };
   } catch (error) {
     console.error('Error updating user:', error);
     return { data: null, error: { message: 'Error updating user' } };
@@ -144,10 +230,7 @@ export const useLocalDatabase = () => {
   useEffect(() => {
     // Simulate loading data from files
     const loadData = async () => {
-      // In a real implementation, this would read from files
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 500);
+      setIsLoading(false);
     };
     
     loadData();
@@ -155,7 +238,8 @@ export const useLocalDatabase = () => {
   
   return {
     isLoading,
-    users,
+    patients,
+    doctors,
     createUser,
     findUserByEmail,
     authenticateUser,

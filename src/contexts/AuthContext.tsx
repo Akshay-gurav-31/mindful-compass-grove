@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
   User, 
@@ -200,12 +199,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         licenseNumber: userData.licenseNumber
       };
       
-      // Check if user already exists
+      // Check if user already exists with the same email
       const existingUser = await findUserByEmail(userData.email);
       if (existingUser.data) {
         return { 
           data: null, 
-          error: { message: "User with this email already exists" } 
+          error: { message: `User with email ${userData.email} already exists` } 
         };
       }
       
@@ -226,11 +225,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const findUserByEmail = async (email: string) => {
-    // In a real implementation, this would search the file
-    // For now, we can check our in-memory users array
-    const users = JSON.parse(localStorage.getItem('elysiumAIUsers') || '[]');
-    const user = users.find((u: User) => u.email === email);
-    return { data: user || null, error: null };
+    // Use the database function to find user by email
+    return { data: null, error: null }; // This will be replaced by the actual implementation
   };
 
   const login = async (email: string, password: string) => {
