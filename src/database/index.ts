@@ -256,27 +256,3 @@ export const updateUserProfile = (userId: string, userData: Partial<User>) => {
     return { data: null, error: { message: 'Error updating user' } };
   }
 };
-
-// Custom hook for using the local database
-export const useLocalDatabase = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    // Simulate loading data from files
-    const loadData = async () => {
-      setIsLoading(false);
-    };
-    
-    loadData();
-  }, []);
-  
-  return {
-    isLoading,
-    patients,
-    doctors,
-    createUser,
-    findUserByEmail,
-    authenticateUser,
-    updateUserProfile
-  };
-};
