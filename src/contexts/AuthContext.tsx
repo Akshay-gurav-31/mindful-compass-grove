@@ -199,16 +199,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         licenseNumber: userData.licenseNumber
       };
       
-      // Check if user already exists with the same email
-      const existingUser = await findUserByEmail(userData.email);
-      if (existingUser.data) {
-        return { 
-          data: null, 
-          error: { message: `User with email ${userData.email} already exists` } 
-        };
-      }
-      
-      // Create the user
+      // Create the user using the database function
       const result = createUser(formattedUserData);
       
       if (result.error) {
@@ -224,16 +215,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const findUserByEmail = async (email: string) => {
-    // Use the database function to find user by email
-    return { data: null, error: null }; // This will be replaced by the actual implementation
-  };
-
   const login = async (email: string, password: string) => {
     try {
       console.log("Logging in with:", email);
       
-      // Authenticate user
+      // Authenticate user using database function
       const result = authenticateUser(email, password);
       
       if (result.error) {

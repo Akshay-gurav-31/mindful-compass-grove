@@ -1,6 +1,5 @@
 
 // Permanent file-based database system
-import { useState, useEffect } from 'react';
 import fs from 'fs';
 import path from 'path';
 
@@ -21,8 +20,8 @@ export interface User {
 }
 
 // File paths
-const PATIENTS_DB_PATH = 'src/database/patients.json';
-const DOCTORS_DB_PATH = 'src/database/doctors.json';
+const PATIENTS_DB_PATH = path.join(process.cwd(), 'src/database/patients.json');
+const DOCTORS_DB_PATH = path.join(process.cwd(), 'src/database/doctors.json');
 
 // In-memory database (loaded from files)
 let patients: User[] = [];
@@ -31,26 +30,40 @@ let doctors: User[] = [];
 // Write data to files
 const saveData = () => {
   try {
-    // For browser environments, use localStorage
-    localStorage.setItem('elysiumAI_patients', JSON.stringify(patients));
-    localStorage.setItem('elysiumAI_doctors', JSON.stringify(doctors));
+    // Create directory if it doesn't exist
+    const dir = path.dirname(PATIENTS_DB_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
     
-    console.log('Saved patients:', patients);
-    console.log('Saved doctors:', doctors);
+    // Write data to files
+    fs.writeFileSync(PATIENTS_DB_PATH, JSON.stringify(patients, null, 2));
+    fs.writeFileSync(DOCTORS_DB_PATH, JSON.stringify(doctors, null, 2));
+    
+    console.log('Saved patients to file:', PATIENTS_DB_PATH);
+    console.log('Saved doctors to file:', DOCTORS_DB_PATH);
   } catch (error) {
-    console.error('Error saving data:', error);
+    console.error('Error saving data to files:', error);
+    
+    // Fallback to localStorage if file system access fails (for browser environments)
+    try {
+      localStorage.setItem('elysiumAI_patients', JSON.stringify(patients));
+      localStorage.setItem('elysiumAI_doctors', JSON.stringify(doctors));
+      console.log('Saved to localStorage as fallback');
+    } catch (localStorageError) {
+      console.error('Error saving to localStorage:', localStorageError);
+    }
   }
 };
 
 // Load data from files or initialize with sample data if files don't exist
 const loadInitialData = () => {
   try {
-    // For browser environments, use localStorage
-    const storedPatients = localStorage.getItem('elysiumAI_patients');
-    const storedDoctors = localStorage.getItem('elysiumAI_doctors');
-    
-    if (storedPatients) {
-      patients = JSON.parse(storedPatients);
+    // Try to load from files first
+    if (fs.existsSync(PATIENTS_DB_PATH)) {
+      const data = fs.readFileSync(PATIENTS_DB_PATH, 'utf8');
+      patients = JSON.parse(data);
+      console.log('Loaded patients from file:', PATIENTS_DB_PATH);
     } else {
       // Sample patient data if no file exists
       patients = [
@@ -66,8 +79,10 @@ const loadInitialData = () => {
       saveData();
     }
     
-    if (storedDoctors) {
-      doctors = JSON.parse(storedDoctors);
+    if (fs.existsSync(DOCTORS_DB_PATH)) {
+      const data = fs.readFileSync(DOCTORS_DB_PATH, 'utf8');
+      doctors = JSON.parse(data);
+      console.log('Loaded doctors from file:', DOCTORS_DB_PATH);
     } else {
       // Sample doctor data if no file exists
       doctors = [
@@ -83,16 +98,38 @@ const loadInitialData = () => {
       // Save the sample data
       saveData();
     }
-    
-    console.log('Loaded patients:', patients);
-    console.log('Loaded doctors:', doctors);
   } catch (error) {
-    console.error('Error loading initial data:', error);
+    console.error('Error loading data from files:', error);
+    
+    // Fallback to localStorage if file system access fails
+    try {
+      const storedPatients = localStorage.getItem('elysiumAI_patients');
+      const storedDoctors = localStorage.getItem('elysiumAI_doctors');
+      
+      if (storedPatients) {
+        patients = JSON.parse(storedPatients);
+        console.log('Loaded patients from localStorage');
+      }
+      
+      if (storedDoctors) {
+        doctors = JSON.parse(storedDoctors);
+        console.log('Loaded doctors from localStorage');
+      }
+    } catch (localStorageError) {
+      console.error('Error loading from localStorage:', localStorageError);
+    }
   }
 };
 
 // Initialize the database
 loadInitialData();
+
+// Helper function to check if an email exists in either database
+const emailExistsInAnyDatabase = (email: string): boolean => {
+  const patientExists = patients.some(p => p.email === email);
+  const doctorExists = doctors.some(d => d.email === email);
+  return patientExists || doctorExists;
+};
 
 // Database operations
 export const createUser = (userData: Omit<User, 'id'>) => {
@@ -106,13 +143,12 @@ export const createUser = (userData: Omit<User, 'id'>) => {
       id
     };
     
-    // Check if user with the same email already exists
-    const existingUser = findUserByEmail(userData.email).data;
-    if (existingUser) {
+    // Check if email already exists in ANY database (patient or doctor)
+    if (emailExistsInAnyDatabase(userData.email)) {
       return { 
         data: null, 
         error: { 
-          message: `A ${userData.type} with this email already exists` 
+          message: `A user with this email already exists` 
         } 
       };
     }
@@ -128,8 +164,6 @@ export const createUser = (userData: Omit<User, 'id'>) => {
     saveData();
     
     console.log(`Created new ${userData.type}:`, newUser);
-    console.log('Current patients:', patients);
-    console.log('Current doctors:', doctors);
     
     return { data: newUser, error: null };
   } catch (error) {
