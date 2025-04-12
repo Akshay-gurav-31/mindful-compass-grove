@@ -16,6 +16,7 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
+import "./index.css";
 
 const queryClient = new QueryClient();
 

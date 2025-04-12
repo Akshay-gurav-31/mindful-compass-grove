@@ -19,6 +19,29 @@ export interface User {
   updatedAt?: string;
 }
 
+// Define the Appointment type
+export interface Appointment {
+  id: string;
+  doctorId: string;
+  patientId: string;
+  doctorName: string;
+  patientName: string;
+  date: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  notes?: string;
+}
+
+// Define the PatientRequest type
+export interface PatientRequest {
+  id: string;
+  patientName: string;
+  patientId: string;
+  message: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  date: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
 // In-memory database as fallback
 let patientsDB: User[] = [];
 let doctorsDB: User[] = [];
@@ -66,6 +89,27 @@ const isEmailUnique = (email: string) => {
   const patientExists = patientsDB.some((patient) => patient.email === email);
   const doctorExists = doctorsDB.some((doctor) => doctor.email === email);
   return !patientExists && !doctorExists;
+};
+
+// Find user by email
+export const findUserByEmail = (email: string) => {
+  try {
+    // Check in both patient and doctor arrays
+    const patient = patientsDB.find(p => p.email === email);
+    if (patient) {
+      return { data: patient, error: null };
+    }
+    
+    const doctor = doctorsDB.find(d => d.email === email);
+    if (doctor) {
+      return { data: doctor, error: null };
+    }
+    
+    return { data: null, error: null };
+  } catch (error) {
+    console.error('Error finding user:', error);
+    return { data: null, error: { message: 'Error finding user' } };
+  }
 };
 
 // Create a new user (patient or doctor)
@@ -170,27 +214,6 @@ export const authenticateUser = (email: string, password: string) => {
         message: "Authentication failed. Please try again."
       }
     };
-  }
-};
-
-// Find user by email
-export const findUserByEmail = (email: string) => {
-  try {
-    // Check in both patient and doctor arrays
-    const patient = patientsDB.find(p => p.email === email);
-    if (patient) {
-      return { data: patient, error: null };
-    }
-    
-    const doctor = doctorsDB.find(d => d.email === email);
-    if (doctor) {
-      return { data: doctor, error: null };
-    }
-    
-    return { data: null, error: null };
-  } catch (error) {
-    console.error('Error finding user:', error);
-    return { data: null, error: { message: 'Error finding user' } };
   }
 };
 
@@ -326,17 +349,6 @@ export const getAllPatients = () => {
 };
 
 // Add a new appointment
-export interface Appointment {
-  id: string;
-  doctorId: string;
-  patientId: string;
-  doctorName: string;
-  patientName: string;
-  date: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
-  notes?: string;
-}
-
 export const addAppointment = (appointmentData: Omit<Appointment, 'id'>) => {
   try {
     const appointment = {
@@ -362,17 +374,6 @@ export const addAppointment = (appointmentData: Omit<Appointment, 'id'>) => {
     };
   }
 };
-
-// Patient request interface
-export interface PatientRequest {
-  id: string;
-  patientName: string;
-  patientId: string;
-  message: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  date: string;
-  severity: 'low' | 'medium' | 'high';
-}
 
 // Add patient request
 export const addPatientRequest = (requestData: Omit<PatientRequest, 'id'>) => {

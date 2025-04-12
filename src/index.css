@@ -1,106 +1,176 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 230 30% 10%;
-    --foreground: 210 40% 98%;
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
+}
 
-    --card: 230 30% 15%;
-    --card-foreground: 210 40% 98%;
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 48%;
+}
 
-    --popover: 230 30% 15%;
-    --popover-foreground: 210 40% 98%;
+body {
+  @apply bg-background text-foreground;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
 
-    --primary: 225 73% 57%;
-    --primary-foreground: 0 0% 100%;
+.elysium-container {
+  @apply container mx-auto px-4 md:px-6 max-w-7xl;
+}
 
-    --secondary: 270 67% 60%;
-    --secondary-foreground: 0 0% 100%;
+.elysium-btn-primary {
+  @apply bg-primary text-white hover:bg-primary/90 transition-colors;
+}
 
-    --muted: 230 30% 20%;
-    --muted-foreground: 210 40% 75%;
+.elysium-btn-outline {
+  @apply border border-primary text-primary hover:bg-primary hover:text-white transition-colors;
+}
 
-    --accent: 246 70% 90%;
-    --accent-foreground: 230 30% 10%;
+.section-padding {
+  @apply py-12 md:py-16 lg:py-24;
+}
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+.section-heading {
+  @apply text-2xl md:text-3xl lg:text-4xl font-bold;
+}
 
-    --border: 230 30% 20%;
-    --input: 230 30% 20%;
-    --ring: 225 73% 57%;
+.hero-heading {
+  @apply text-3xl md:text-4xl lg:text-5xl font-bold;
+}
 
-    --radius: 0.5rem;
+.card-heading {
+  @apply text-xl font-semibold;
+}
 
-    --sidebar-background: 230 30% 18%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 225 73% 57%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 246 70% 90%;
-    --sidebar-accent-foreground: 230 30% 10%;
-    --sidebar-border: 230 30% 25%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+.gradient-bg {
+  background: linear-gradient(120deg, rgba(var(--primary), 0.1), rgba(var(--secondary), 0.2));
+}
+
+/* Dashboard styles */
+.dashboard-container {
+  @apply mx-auto px-4;
+}
+
+/* Animations */
+.animate-fade-up {
+  animation: fadeUp 0.8s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
-
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
-  }
-  
-  .elysium-container {
-    @apply container px-4 mx-auto;
+  to {
+    opacity: 1;
   }
 }
 
-@layer components {
-  .hero-heading {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold font-display leading-tight;
-  }
-  
-  .section-heading {
-    @apply text-2xl md:text-3xl lg:text-4xl font-bold font-display leading-tight;
-  }
-  
-  .card-heading {
-    @apply text-xl font-semibold font-display leading-tight;
-  }
-  
-  .section-padding {
-    @apply py-12 md:py-20;
-  }
-  
-  .elysium-btn-primary {
-    @apply bg-primary hover:bg-secondary text-white font-medium py-2 px-6 rounded-md transition-colors duration-300;
-  }
-  
-  .elysium-btn-secondary {
-    @apply bg-accent hover:bg-blue-400 text-accent-foreground font-medium py-2 px-6 rounded-md transition-colors duration-300;
-  }
-  
-  .elysium-btn-outline {
-    @apply border-2 border-primary hover:bg-opacity-20 hover:bg-primary text-primary font-medium py-2 px-6 rounded-md transition-colors duration-300;
-  }
-  
-  .dark-card {
-    @apply bg-card border-muted text-card-foreground shadow-lg;
-  }
-  
-  .dark-input {
-    @apply bg-muted border-muted-foreground text-foreground placeholder:text-muted-foreground;
-  }
-  
-  .gradient-bg {
-    @apply bg-gradient-to-br from-primary/20 via-background to-secondary/20;
-  }
+/* Mindful-specific colors */
+:root {
+  --mindful-primary: #5C6AC4;
+  --mindful-secondary: #2D3F7C;
+  --mindful-accent: #8CD5E8;
+  --mindful-light: #EFF6FF;
+  --mindful-dark: #1A2646;
+}
+
+.bg-mindful-primary {
+  background-color: var(--mindful-primary);
+}
+
+.text-mindful-primary {
+  color: var(--mindful-primary);
+}
+
+.border-mindful-primary {
+  border-color: var(--mindful-primary);
+}
+
+.bg-mindful-secondary {
+  background-color: var(--mindful-secondary);
+}
+
+.text-mindful-secondary {
+  color: var(--mindful-secondary);
+}
+
+.bg-mindful-accent {
+  background-color: var(--mindful-accent);
+}
+
+.text-mindful-accent {
+  color: var(--mindful-accent);
+}
+
+.bg-mindful-light {
+  background-color: var(--mindful-light);
+}
+
+.text-mindful-light {
+  color: var(--mindful-light);
+}
+
+.bg-mindful-dark {
+  background-color: var(--mindful-dark);
+}
+
+.text-mindful-dark {
+  color: var(--mindful-dark);
 }
