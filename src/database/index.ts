@@ -5,7 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 export interface User {
   id: string;
   email: string;
-  name: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
   type: 'patient' | 'doctor';
   profileImage?: string;
   phone?: string;
@@ -15,6 +17,7 @@ export interface User {
   specialization?: string;
   medicalHistory?: string;
   password: string;
+  licenseNumber?: string;
   createdAt?: string;
   updatedAt?: string;
 }
