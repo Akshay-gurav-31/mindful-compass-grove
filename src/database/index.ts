@@ -1,9 +1,7 @@
 
-// Permanent file-based database system
-import fs from 'fs';
-import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
-// Types
+// Define the User type
 export interface User {
   id: string;
   email: string;
@@ -16,171 +14,175 @@ export interface User {
   bio?: string;
   specialization?: string;
   medicalHistory?: string;
-  password: string; // We store the password in plaintext for simplicity (not secure for production)
+  password: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// File paths
-const PATIENTS_DB_PATH = path.join(process.cwd(), 'src/database/patients.json');
-const DOCTORS_DB_PATH = path.join(process.cwd(), 'src/database/doctors.json');
+// In-memory database as fallback
+let patientsDB: User[] = [];
+let doctorsDB: User[] = [];
 
-// In-memory database (loaded from files)
-let patients: User[] = [];
-let doctors: User[] = [];
-
-// Write data to files
-const saveData = () => {
+// Function to load patients data from JSON file
+const loadPatientsData = () => {
   try {
-    // Create directory if it doesn't exist
-    const dir = path.dirname(PATIENTS_DB_PATH);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    
-    // Write data to files
-    fs.writeFileSync(PATIENTS_DB_PATH, JSON.stringify(patients, null, 2));
-    fs.writeFileSync(DOCTORS_DB_PATH, JSON.stringify(doctors, null, 2));
-    
-    console.log('Saved patients to file:', PATIENTS_DB_PATH);
-    console.log('Saved doctors to file:', DOCTORS_DB_PATH);
+    // In a real application, this would be an API call
+    const data = require('./patients.json');
+    patientsDB = data;
+    return data;
   } catch (error) {
-    console.error('Error saving data to files:', error);
-    
-    // Fallback to localStorage if file system access fails (for browser environments)
-    try {
-      localStorage.setItem('elysiumAI_patients', JSON.stringify(patients));
-      localStorage.setItem('elysiumAI_doctors', JSON.stringify(doctors));
-      console.log('Saved to localStorage as fallback');
-    } catch (localStorageError) {
-      console.error('Error saving to localStorage:', localStorageError);
-    }
+    console.error("Error loading patients data:", error);
+    return [];
   }
 };
 
-// Load data from files or initialize with sample data if files don't exist
-const loadInitialData = () => {
+// Function to load doctors data from JSON file
+const loadDoctorsData = () => {
   try {
-    // Try to load from files first
-    if (fs.existsSync(PATIENTS_DB_PATH)) {
-      const data = fs.readFileSync(PATIENTS_DB_PATH, 'utf8');
-      patients = JSON.parse(data);
-      console.log('Loaded patients from file:', PATIENTS_DB_PATH);
-    } else {
-      // Sample patient data if no file exists
-      patients = [
-        {
-          id: '1',
-          email: 'patient@example.com',
-          password: 'password123',
-          name: 'John Patient',
-          type: 'patient',
-        }
-      ];
-      // Save the sample data
-      saveData();
-    }
-    
-    if (fs.existsSync(DOCTORS_DB_PATH)) {
-      const data = fs.readFileSync(DOCTORS_DB_PATH, 'utf8');
-      doctors = JSON.parse(data);
-      console.log('Loaded doctors from file:', DOCTORS_DB_PATH);
-    } else {
-      // Sample doctor data if no file exists
-      doctors = [
-        {
-          id: '2',
-          email: 'doctor@example.com',
-          password: 'password123',
-          name: 'Dr. Jane Smith',
-          type: 'doctor',
-          specialization: 'Psychiatrist',
-        }
-      ];
-      // Save the sample data
-      saveData();
-    }
+    // In a real application, this would be an API call
+    const data = require('./doctors.json');
+    doctorsDB = data;
+    return data;
   } catch (error) {
-    console.error('Error loading data from files:', error);
-    
-    // Fallback to localStorage if file system access fails
-    try {
-      const storedPatients = localStorage.getItem('elysiumAI_patients');
-      const storedDoctors = localStorage.getItem('elysiumAI_doctors');
-      
-      if (storedPatients) {
-        patients = JSON.parse(storedPatients);
-        console.log('Loaded patients from localStorage');
-      }
-      
-      if (storedDoctors) {
-        doctors = JSON.parse(storedDoctors);
-        console.log('Loaded doctors from localStorage');
-      }
-    } catch (localStorageError) {
-      console.error('Error loading from localStorage:', localStorageError);
-    }
+    console.error("Error loading doctors data:", error);
+    return [];
   }
 };
 
-// Initialize the database
-loadInitialData();
-
-// Helper function to check if an email exists in either database
-const emailExistsInAnyDatabase = (email: string): boolean => {
-  const patientExists = patients.some(p => p.email === email);
-  const doctorExists = doctors.some(d => d.email === email);
-  return patientExists || doctorExists;
+// Initialize databases
+const initializeDB = () => {
+  // Load data from JSON files
+  patientsDB = loadPatientsData();
+  doctorsDB = loadDoctorsData();
+  console.log("Database initialized with patients:", patientsDB.length);
+  console.log("Database initialized with doctors:", doctorsDB.length);
 };
 
-// Database operations
+// Initialize on first import
+initializeDB();
+
+// Check if email already exists in either patients or doctors DB
+const isEmailUnique = (email: string) => {
+  const patientExists = patientsDB.some((patient) => patient.email === email);
+  const doctorExists = doctorsDB.some((doctor) => doctor.email === email);
+  return !patientExists && !doctorExists;
+};
+
+// Create a new user (patient or doctor)
 export const createUser = (userData: Omit<User, 'id'>) => {
   try {
-    // Generate a random ID
-    const id = Math.random().toString(36).substring(2, 15);
-    
-    // Create the new user
-    const newUser: User = {
-      ...userData,
-      id
-    };
-    
-    // Check if email already exists in ANY database (patient or doctor)
-    if (emailExistsInAnyDatabase(userData.email)) {
-      return { 
-        data: null, 
-        error: { 
-          message: `A user with this email already exists` 
-        } 
+    // Check if email already exists
+    if (!isEmailUnique(userData.email)) {
+      return {
+        data: null,
+        error: {
+          message: "Email already in use. Please use a different email."
+        }
       };
     }
-    
-    // Add to the appropriate array based on user type
+
+    // Create user object with ID
+    const newUser: User = {
+      id: uuidv4(),
+      ...userData,
+      // Ensure created timestamp
+      createdAt: new Date().toISOString()
+    };
+
+    // Add to appropriate database based on user type
     if (userData.type === 'patient') {
-      patients.push(newUser);
+      patientsDB.push(newUser);
+      // In a real app, this would save to the server
+      console.log("Created new patient:", newUser.email);
     } else if (userData.type === 'doctor') {
-      doctors.push(newUser);
+      doctorsDB.push(newUser);
+      // In a real app, this would save to the server
+      console.log("Created new doctor:", newUser.email);
+    } else {
+      return {
+        data: null,
+        error: {
+          message: "Invalid user type. Must be 'patient' or 'doctor'."
+        }
+      };
     }
-    
-    // Save to file
-    saveData();
-    
-    console.log(`Created new ${userData.type}:`, newUser);
-    
-    return { data: newUser, error: null };
+
+    return {
+      data: {
+        user: newUser
+      },
+      error: null
+    };
   } catch (error) {
-    console.error('Error creating user:', error);
-    return { data: null, error: { message: 'Error creating user' } };
+    console.error("Error creating user:", error);
+    return {
+      data: null,
+      error: {
+        message: "Failed to create user. Please try again."
+      }
+    };
   }
 };
 
+// Authenticate a user (login)
+export const authenticateUser = (email: string, password: string) => {
+  try {
+    // Check patients database
+    let user = patientsDB.find((patient) => patient.email === email);
+
+    // If not found in patients, check doctors
+    if (!user) {
+      user = doctorsDB.find((doctor) => doctor.email === email);
+    }
+
+    // User not found with this email
+    if (!user) {
+      return {
+        data: null,
+        error: {
+          message: "No account found with this email."
+        }
+      };
+    }
+
+    // Check password
+    if (user.password !== password) {
+      return {
+        data: null,
+        error: {
+          message: "Incorrect password."
+        }
+      };
+    }
+
+    // Successful authentication
+    return {
+      data: {
+        user
+      },
+      error: null
+    };
+  } catch (error) {
+    console.error("Error authenticating user:", error);
+    return {
+      data: null,
+      error: {
+        message: "Authentication failed. Please try again."
+      }
+    };
+  }
+};
+
+// Find user by email
 export const findUserByEmail = (email: string) => {
   try {
     // Check in both patient and doctor arrays
-    const patient = patients.find(p => p.email === email);
+    const patient = patientsDB.find(p => p.email === email);
     if (patient) {
       return { data: patient, error: null };
     }
     
-    const doctor = doctors.find(d => d.email === email);
+    const doctor = doctorsDB.find(d => d.email === email);
     if (doctor) {
       return { data: doctor, error: null };
     }
@@ -192,67 +194,209 @@ export const findUserByEmail = (email: string) => {
   }
 };
 
-export const authenticateUser = (email: string, password: string) => {
+// Get user by ID
+export const getUserById = (userId: string) => {
   try {
-    // Check in patient array
-    let user = patients.find(p => p.email === email && p.password === password);
-    
-    // If not found in patients, check in doctors
+    // Check patients database
+    let user = patientsDB.find((patient) => patient.id === userId);
+
+    // If not found in patients, check doctors
     if (!user) {
-      user = doctors.find(d => d.email === email && d.password === password);
+      user = doctorsDB.find((doctor) => doctor.id === userId);
     }
-    
+
     if (!user) {
-      return { 
-        data: null, 
-        error: { message: 'Invalid login credentials' }
+      return {
+        data: null,
+        error: {
+          message: "User not found."
+        }
       };
     }
-    
-    return { 
-      data: { 
-        user: { ...user, password: undefined } // Remove password from returned user
-      }, 
-      error: null 
+
+    return {
+      data: {
+        user
+      },
+      error: null
     };
   } catch (error) {
-    console.error('Error authenticating user:', error);
-    return { data: null, error: { message: 'Error authenticating user' } };
+    console.error("Error getting user:", error);
+    return {
+      data: null,
+      error: {
+        message: "Failed to retrieve user."
+      }
+    };
   }
 };
 
+// Update user profile
 export const updateUserProfile = (userId: string, userData: Partial<User>) => {
   try {
-    // Check in patient array first
-    let userIndex = patients.findIndex(p => p.id === userId);
-    let userArray = patients;
-    let userType = 'patient';
-    
-    // If not found in patients, check in doctors
-    if (userIndex === -1) {
-      userIndex = doctors.findIndex(d => d.id === userId);
-      userArray = doctors;
-      userType = 'doctor';
+    // Find in patients
+    const patientIndex = patientsDB.findIndex((patient) => patient.id === userId);
+    if (patientIndex !== -1) {
+      // Update patient
+      patientsDB[patientIndex] = {
+        ...patientsDB[patientIndex],
+        ...userData,
+        updatedAt: new Date().toISOString()
+      };
+      return {
+        data: {
+          user: patientsDB[patientIndex]
+        },
+        error: null
+      };
     }
-    
-    if (userIndex === -1) {
-      return { data: null, error: { message: 'User not found' } };
+
+    // Find in doctors
+    const doctorIndex = doctorsDB.findIndex((doctor) => doctor.id === userId);
+    if (doctorIndex !== -1) {
+      // Update doctor
+      doctorsDB[doctorIndex] = {
+        ...doctorsDB[doctorIndex],
+        ...userData,
+        updatedAt: new Date().toISOString()
+      };
+      return {
+        data: {
+          user: doctorsDB[doctorIndex]
+        },
+        error: null
+      };
     }
-    
-    // Update the user
-    userArray[userIndex] = {
-      ...userArray[userIndex],
-      ...userData
+
+    return {
+      data: null,
+      error: {
+        message: "User not found."
+      }
+    };
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    return {
+      data: null,
+      error: {
+        message: "Failed to update profile. Please try again."
+      }
+    };
+  }
+};
+
+// Get all doctors
+export const getAllDoctors = () => {
+  try {
+    return {
+      data: {
+        doctors: doctorsDB
+      },
+      error: null
+    };
+  } catch (error) {
+    console.error("Error getting doctors:", error);
+    return {
+      data: null,
+      error: {
+        message: "Failed to retrieve doctors."
+      }
+    };
+  }
+};
+
+// Get all patients
+export const getAllPatients = () => {
+  try {
+    return {
+      data: {
+        patients: patientsDB
+      },
+      error: null
+    };
+  } catch (error) {
+    console.error("Error getting patients:", error);
+    return {
+      data: null,
+      error: {
+        message: "Failed to retrieve patients."
+      }
+    };
+  }
+};
+
+// Add a new appointment
+export interface Appointment {
+  id: string;
+  doctorId: string;
+  patientId: string;
+  doctorName: string;
+  patientName: string;
+  date: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  notes?: string;
+}
+
+export const addAppointment = (appointmentData: Omit<Appointment, 'id'>) => {
+  try {
+    const appointment = {
+      id: uuidv4(),
+      ...appointmentData
     };
     
-    // Save to file
-    saveData();
-    
-    console.log(`Updated ${userType}:`, userArray[userIndex]);
-    
-    return { data: userArray[userIndex], error: null };
+    // In a real app, this would save to the database
+    console.log("New appointment added:", appointment);
+    return {
+      data: {
+        appointment
+      },
+      error: null
+    };
   } catch (error) {
-    console.error('Error updating user:', error);
-    return { data: null, error: { message: 'Error updating user' } };
+    console.error("Error adding appointment:", error);
+    return {
+      data: null,
+      error: {
+        message: "Failed to add appointment. Please try again."
+      }
+    };
+  }
+};
+
+// Patient request interface
+export interface PatientRequest {
+  id: string;
+  patientName: string;
+  patientId: string;
+  message: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  date: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+// Add patient request
+export const addPatientRequest = (requestData: Omit<PatientRequest, 'id'>) => {
+  try {
+    const request = {
+      id: uuidv4(),
+      ...requestData
+    };
+    
+    // In a real app, this would save to the database
+    console.log("New patient request added:", request);
+    return {
+      data: {
+        request
+      },
+      error: null
+    };
+  } catch (error) {
+    console.error("Error adding patient request:", error);
+    return {
+      data: null,
+      error: {
+        message: "Failed to submit request. Please try again."
+      }
+    };
   }
 };

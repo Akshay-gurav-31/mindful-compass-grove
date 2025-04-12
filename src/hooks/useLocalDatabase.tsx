@@ -1,6 +1,19 @@
 
 import { useState, useEffect } from 'react';
-import { User, findUserByEmail, authenticateUser, createUser, updateUserProfile } from '@/database';
+import { 
+  User,
+  Appointment,
+  PatientRequest,
+  findUserByEmail, 
+  authenticateUser, 
+  createUser, 
+  updateUserProfile,
+  getUserById,
+  getAllDoctors,
+  getAllPatients,
+  addAppointment,
+  addPatientRequest
+} from '@/database';
 
 // Custom hook for using the local database
 export const useLocalDatabase = () => {
@@ -12,8 +25,17 @@ export const useLocalDatabase = () => {
     // Simulate loading data from files
     const loadData = async () => {
       try {
-        // In a real implementation, we would fetch the data here
-        // For now, we'll just set loading to false
+        const patientsResult = getAllPatients();
+        const doctorsResult = getAllDoctors();
+        
+        if (patientsResult.data) {
+          setPatients(patientsResult.data.patients);
+        }
+        
+        if (doctorsResult.data) {
+          setDoctors(doctorsResult.data.doctors);
+        }
+        
         setIsLoading(false);
       } catch (error) {
         console.error("Error in useLocalDatabase:", error);
@@ -31,6 +53,11 @@ export const useLocalDatabase = () => {
     createUser,
     findUserByEmail,
     authenticateUser,
-    updateUserProfile
+    updateUserProfile,
+    getUserById,
+    getAllDoctors,
+    getAllPatients,
+    addAppointment,
+    addPatientRequest
   };
 };
