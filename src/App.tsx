@@ -13,6 +13,7 @@ import Signup from "./pages/Signup";
 import Chatbot from "./pages/Chatbot";
 import Dashboard from "./pages/Dashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
+import Shop from "./pages/Shop";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/shop" element={<Shop />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />

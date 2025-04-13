@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserCircle, LogOut, MessageSquare, Calendar, Video } from "lucide-react";
+import { UserCircle, LogOut, MessageSquare, Calendar, Video, ShoppingBag } from "lucide-react";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -36,6 +36,7 @@ const Navbar = () => {
             <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">Home</Link>
             <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link>
             <Link to="/services" className="text-muted-foreground hover:text-primary transition-colors">Services</Link>
+            <Link to="/shop" className="text-muted-foreground hover:text-primary transition-colors">Shop</Link>
             <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link>
             
             {/* Show AI Support link only for patients or non-logged in users */}
@@ -96,6 +97,7 @@ const Navbar = () => {
             <Link to="/" className="text-muted-foreground hover:text-primary transition-colors">Home</Link>
             <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">About</Link>
             <Link to="/services" className="text-muted-foreground hover:text-primary transition-colors">Services</Link>
+            <Link to="/shop" className="text-muted-foreground hover:text-primary transition-colors">Shop</Link>
             <Link to="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link>
             
             {/* Show AI Support link only for patients or non-logged in users */}
