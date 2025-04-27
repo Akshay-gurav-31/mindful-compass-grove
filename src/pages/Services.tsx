@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,74 +7,85 @@ const Services = () => {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="bg-mindful-primary text-white py-20">
-        <div className="mindful-container text-center">
-          <h1 className="hero-heading mb-6">Our Services</h1>
-          <p className="text-xl max-w-3xl mx-auto">
+      <section className="relative bg-[#0a1128] text-white py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a1128]/90 to-[#0a1128]/60 z-0"></div>
+        <div className="elysium-container relative z-10 text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-display mb-6">
+            Our <span className="text-primary">Services</span>
+          </h1>
+          <p className="text-xl max-w-3xl mx-auto text-white/80">
             Comprehensive mental health support designed around your individual needs.
           </p>
         </div>
       </section>
 
       {/* AI Chat Support */}
-      <section className="section-padding bg-white">
-        <div className="mindful-container">
+      <section className="py-20 bg-background">
+        <div className="elysium-container">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 order-2 md:order-1">
-              <h2 className="section-heading text-mindful-darkText">AI Chat Support</h2>
-              <p className="text-gray-600">
+              <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground">
+                AI <span className="text-primary">Chat Support</span>
+              </h2>
+              <p className="text-lg text-muted-foreground">
                 Our AI-powered chatbot provides immediate mental health support, helping to identify your needs and guiding you through initial steps.
               </p>
-              <ul className="space-y-2 text-gray-600 list-disc list-inside">
+              <ul className="space-y-3 text-muted-foreground list-disc list-inside">
                 <li>Available 24/7 for immediate support</li>
                 <li>Helps identify your mental health needs</li>
                 <li>Provides resources for common concerns</li>
                 <li>Assists with finding the right professional help</li>
                 <li>Completely confidential and secure</li>
               </ul>
-              <div className="pt-2">
+              <div className="pt-4">
                 <Link to="/signup">
-                  <Button className="mindful-btn-primary">Try AI Chat</Button>
+                  <Button className="elysium-btn-primary text-lg px-8 py-6">Try AI Chat</Button>
                 </Link>
               </div>
             </div>
-            <div className="rounded-lg overflow-hidden shadow-xl order-1 md:order-2">
-              <img 
-                src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7" 
-                alt="Woman using laptop for AI mental health chat" 
-                className="w-full h-auto object-cover"
-              />
+            <div className="relative rounded-xl overflow-hidden order-1 md:order-2 border border-border group">
+              <div className="aspect-w-16 aspect-h-9">
+                <img 
+                  src="src\img\bot.png"
+                  alt="Woman using laptop for AI mental health chat" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Video Consultations */}
-      <section className="section-padding bg-mindful-warmNeutral">
-        <div className="mindful-container">
+      <section className="py-20 bg-[#0a1128]/5">
+        <div className="elysium-container">
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="rounded-lg overflow-hidden shadow-xl">
-              <img 
-                src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158" 
-                alt="Woman in virtual therapy session" 
-                className="w-full h-auto object-cover"
-              />
+            <div className="relative rounded-xl overflow-hidden border border-border group">
+              <div className="aspect-w-16 aspect-h-9">
+                <img 
+                  src="src/img/vid.png" 
+                  alt="Woman in virtual therapy session" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
             </div>
             <div className="space-y-6">
-              <h2 className="section-heading text-mindful-darkText">Video Consultations</h2>
-              <p className="text-gray-600">
-                Connect face-to-face with mental health professionals through our secure video platform, providing the personal touch of in-person therapy from the comfort of your home.
+              <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground">
+                Video <span className="text-primary">Consultations</span>
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Connect face-to-face with mental health professionals through our secure video platform.
               </p>
-              <ul className="space-y-2 text-gray-600 list-disc list-inside">
+              <ul className="space-y-3 text-muted-foreground list-disc list-inside">
                 <li>Secure, HIPAA-compliant video platform</li>
                 <li>Schedule sessions at your convenience</li>
-                <li>Connect with therapists specializing in your specific needs</li>
-                <li>Access therapy from anywhere with internet connection</li>
-                <li>Options for both scheduled and urgent consultations</li>
+                <li>Connect with specialists for your needs</li>
+                <li>Access therapy from anywhere</li>
+                <li>Options for urgent consultations</li>
               </ul>
-              <div className="pt-2">
+              <div className="pt-4">
                 <Link to="/signup">
-                  <Button className="mindful-btn-primary">Book Video Session</Button>
+                  <Button className="elysium-btn-primary text-lg px-8 py-6">Book Video Session</Button>
                 </Link>
               </div>
             </div>
@@ -84,26 +94,28 @@ const Services = () => {
       </section>
 
       {/* Professional Therapy */}
-      <section className="section-padding bg-white">
-        <div className="mindful-container">
-          <div className="text-center mb-12">
-            <h2 className="section-heading text-mindful-darkText mb-4">Professional Therapy</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Our network includes licensed therapists, counselors, and mental health specialists covering a wide range of expertise.
+      <section className="py-20 bg-background">
+        <div className="elysium-container">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-4">
+              Professional <span className="text-primary">Therapy</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Our network includes licensed therapists, counselors, and mental health specialists.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <Card className="shadow-sm hover:shadow-lg transition-all duration-300 dark-card border-border">
               <CardHeader>
-                <CardTitle className="card-heading">Individual Therapy</CardTitle>
-                <CardDescription>One-on-one sessions focused on your needs</CardDescription>
+                <CardTitle className="text-2xl font-semibold font-display">Individual Therapy</CardTitle>
+                <CardDescription className="text-muted-foreground">One-on-one sessions focused on your needs</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Personalized therapy sessions addressing your specific mental health concerns, goals, and challenges.
+                <p className="text-muted-foreground mb-6 text-lg">
+                  Personalized therapy sessions addressing your specific mental health concerns.
                 </p>
-                <ul className="space-y-1 text-gray-600 list-disc list-inside mb-6">
+                <ul className="space-y-2 text-muted-foreground list-disc list-inside mb-8">
                   <li>Depression and anxiety</li>
                   <li>Trauma and PTSD</li>
                   <li>Life transitions</li>
@@ -111,21 +123,21 @@ const Services = () => {
                   <li>Stress management</li>
                 </ul>
                 <Link to="/signup">
-                  <Button variant="outline" className="mindful-btn-outline w-full">Learn More</Button>
+                  <Button variant="outline" className="elysium-btn-outline w-full py-6 text-lg">Learn More</Button>
                 </Link>
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <Card className="shadow-sm hover:shadow-lg transition-all duration-300 dark-card border-border">
               <CardHeader>
-                <CardTitle className="card-heading">Couples Therapy</CardTitle>
-                <CardDescription>Strengthen your relationship</CardDescription>
+                <CardTitle className="text-2xl font-semibold font-display">Couples Therapy</CardTitle>
+                <CardDescription className="text-muted-foreground">Strengthen your relationship</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Improve communication, resolve conflicts, and build a healthier relationship with professional guidance.
+                <p className="text-muted-foreground mb-6 text-lg">
+                  Improve communication, resolve conflicts, and build a healthier relationship.
                 </p>
-                <ul className="space-y-1 text-gray-600 list-disc list-inside mb-6">
+                <ul className="space-y-2 text-muted-foreground list-disc list-inside mb-8">
                   <li>Communication skills</li>
                   <li>Conflict resolution</li>
                   <li>Rebuilding trust</li>
@@ -133,21 +145,21 @@ const Services = () => {
                   <li>Parenting conflicts</li>
                 </ul>
                 <Link to="/signup">
-                  <Button variant="outline" className="mindful-btn-outline w-full">Learn More</Button>
+                  <Button variant="outline" className="elysium-btn-outline w-full py-6 text-lg">Learn More</Button>
                 </Link>
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <Card className="shadow-sm hover:shadow-lg transition-all duration-300 dark-card border-border">
               <CardHeader>
-                <CardTitle className="card-heading">Specialized Treatment</CardTitle>
-                <CardDescription>Targeted approaches for specific needs</CardDescription>
+                <CardTitle className="text-2xl font-semibold font-display">Specialized Treatment</CardTitle>
+                <CardDescription className="text-muted-foreground">Targeted approaches for specific needs</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Evidence-based therapeutic approaches for specific mental health conditions and challenges.
+                <p className="text-muted-foreground mb-6 text-lg">
+                  Evidence-based therapeutic approaches for mental health conditions.
                 </p>
-                <ul className="space-y-1 text-gray-600 list-disc list-inside mb-6">
+                <ul className="space-y-2 text-muted-foreground list-disc list-inside mb-8">
                   <li>Cognitive Behavioral Therapy (CBT)</li>
                   <li>Dialectical Behavior Therapy (DBT)</li>
                   <li>EMDR for trauma</li>
@@ -155,7 +167,7 @@ const Services = () => {
                   <li>Solution-focused therapy</li>
                 </ul>
                 <Link to="/signup">
-                  <Button variant="outline" className="mindful-btn-outline w-full">Learn More</Button>
+                  <Button variant="outline" className="elysium-btn-outline w-full py-6 text-lg">Learn More</Button>
                 </Link>
               </CardContent>
             </Card>
@@ -164,77 +176,99 @@ const Services = () => {
       </section>
 
       {/* Mental Health Resources */}
-      <section className="section-padding bg-mindful-highlight">
-        <div className="mindful-container">
-          <div className="text-center mb-12">
-            <h2 className="section-heading text-mindful-darkText mb-4">Mental Health Resources</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Access self-help tools, educational content, and community support to enhance your mental wellbeing.
+      <section className="py-20 bg-[#0a1128]/10">
+        <div className="elysium-container">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold font-display text-foreground mb-4">
+              Mental Health <span className="text-primary">Resources</span>
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Access self-help tools, educational content, and community support.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="hover:shadow-md transition-shadow">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <Card className="hover:shadow-lg transition-all duration-300 dark-card border-border">
               <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 rounded-full bg-mindful-accent flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-mindful-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                 </div>
-                <CardTitle className="card-heading">Self-Help Library</CardTitle>
+                <CardTitle className="text-2xl font-semibold font-display">Self-Help Library</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-gray-600 mb-4">
-                  Articles, guides, and worksheets on various mental health topics.
+                <p className="text-lg text-muted-foreground mb-6">
+                  Articles, guides, and worksheets on mental health topics.
                 </p>
+                <Link to="/resources">
+                  <Button variant="ghost" className="text-primary hover:bg-primary/10">
+                    Explore Resources
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-lg transition-all duration-300 dark-card border-border">
               <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 rounded-full bg-mindful-accent flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-mindful-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <CardTitle className="card-heading">Video Workshops</CardTitle>
+                <CardTitle className="text-2xl font-semibold font-display">Video Workshops</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-gray-600 mb-4">
-                  Educational videos on mental health skills and wellbeing practices.
+                <p className="text-lg text-muted-foreground mb-6">
+                  Educational videos on mental health skills and wellbeing.
                 </p>
+                <Link to="/workshops">
+                  <Button variant="ghost" className="text-primary hover:bg-primary/10">
+                    View Workshops
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-lg transition-all duration-300 dark-card border-border">
               <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 rounded-full bg-mindful-accent flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-mindful-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <CardTitle className="card-heading">Support Groups</CardTitle>
+                <CardTitle className="text-2xl font-semibold font-display">Support Groups</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-gray-600 mb-4">
+                <p className="text-lg text-muted-foreground mb-6">
                   Virtual groups for shared experiences and peer support.
                 </p>
+                <Link to="/groups">
+                  <Button variant="ghost" className="text-primary hover:bg-primary/10">
+                    Join Groups
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-lg transition-all duration-300 dark-card border-border">
               <CardHeader className="text-center">
-                <div className="mx-auto w-16 h-16 rounded-full bg-mindful-accent flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-mindful-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="mx-auto w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                   </svg>
                 </div>
-                <CardTitle className="card-heading">Assessment Tools</CardTitle>
+                <CardTitle className="text-2xl font-semibold font-display">Assessment Tools</CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-gray-600 mb-4">
-                  Self-assessment questionnaires to track your mental wellbeing.
+                <p className="text-lg text-muted-foreground mb-6">
+                  Self-assessment questionnaires to track your wellbeing.
                 </p>
+                <Link to="/assessments">
+                  <Button variant="ghost" className="text-primary hover:bg-primary/10">
+                    Take Assessment
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </div>
@@ -242,20 +276,23 @@ const Services = () => {
       </section>
 
       {/* Call to Action */}
-      <section className="py-16 bg-mindful-primary text-white">
-        <div className="mindful-container text-center">
-          <h2 className="text-3xl md:text-4xl font-bold font-display mb-6">Start Your Mental Health Journey Today</h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto">
-            Take the first step towards better mental health with Mindful Grove's supportive services.
+      <section className="relative py-24 bg-[#0a1128] text-white overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-secondary/20 z-0"></div>
+        <div className="elysium-container relative z-10 text-center">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display mb-6">
+            Start Your <span className="text-primary">Mental Health</span> Journey
+          </h2>
+          <p className="text-xl mb-10 max-w-2xl mx-auto text-white/80">
+            Take the first step towards better mental health with our supportive services.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-6">
             <Link to="/signup">
-              <Button className="bg-white text-mindful-primary hover:bg-mindful-accent hover:text-mindful-primary transition-colors">
+              <Button className="bg-white text-[#0a1128] hover:bg-primary hover:text-white transition-colors px-10 py-6 text-lg">
                 Sign Up Now
               </Button>
             </Link>
             <Link to="/contact">
-              <Button variant="outline" className="border-white text-white hover:bg-white/10 transition-colors">
+              <Button variant="outline" className="border-white text-white hover:bg-white/10 transition-colors px-10 py-6 text-lg">
                 Contact Us
               </Button>
             </Link>
