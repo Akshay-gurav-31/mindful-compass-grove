@@ -9,7 +9,7 @@ const Index = () => {
   // State for managing the current image index
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [
-    "src/img/dr.png",
+    "mindful-compass-grove/src/img/dr.png",
     "src/img/dr1.png",
     "src/img/dr2.png",
     "src/img/dr3.png",
