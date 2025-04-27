@@ -30,7 +30,7 @@ const Index = () => {
             </div>
             <div className="rounded-lg overflow-hidden shadow-xl animate-fade-in">
               <img 
-                src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158" 
+                src="" 
                 alt="Woman using laptop for mental health consultation" 
                 className="w-full h-auto object-cover"
               />
